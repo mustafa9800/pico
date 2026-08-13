@@ -34,7 +34,9 @@
         body[data-card="5"] { --c-red-pure: #ffb6c1; --c-blue-pure: #add8e6; --c-green-pure: #98fb98; --c-yellow-pure: #f0e68c; --c-red: #ffb6c1; --c-blue: #add8e6; --c-green: #98fb98; --c-yellow: #f0e68c; } 
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: manipulation; }
-        body { background: var(--bg-deep); color: var(--text); position: fixed; width: 100%; height: 100%; overflow: hidden; user-select: none; }
+        
+        /* Tema Arka Planını Doğrudan ve Kesin Olarak Uygular */
+        body { background: var(--table-grad) !important; color: var(--text); position: fixed; width: 100%; height: 100%; overflow: hidden; user-select: none; }
 
         /* === ARKA PLAN KART ANİMASYONU === */
         #bg-anim { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; overflow: hidden; }
@@ -45,7 +47,8 @@
         }
 
         /* === GENEL MENÜ ARAYÜZÜ === */
-        .screen { position: absolute; width: 100%; height: 100%; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--table-grad); backdrop-filter: blur(5px); }
+        /* Screen Arka planı Saydamlaştırıldı */
+        .screen { position: absolute; width: 100%; height: 100%; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; background: transparent; backdrop-filter: blur(5px); }
         .hidden { display: none !important; }
         .pico-title { font-size: clamp(4rem, 12vw, 7rem); margin-bottom: 20px; letter-spacing: 5px; font-style: italic; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5), 0 0 20px #ef4444, 0 0 40px #ef4444; }
         .menu-btn { padding: 12px 25px; margin: 8px; background: rgba(0,0,0,0.4); border: 2px solid var(--text); color: var(--text); cursor: pointer; border-radius: 8px; font-size: 1.1rem; font-weight: bold; transition: 0.3s; width: 280px; max-width: 85vw; z-index: 20; }
@@ -158,9 +161,7 @@
     <div id="bg-anim"></div>
 
     <div id="sound-btn-global" onclick="toggleSound()">
-        <!-- Açık İkonu -->
         <svg id="sound-on-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-        <!-- Kapalı İkonu -->
         <svg id="sound-off-icon" class="hidden" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
     </div>
     
@@ -172,6 +173,9 @@
         <button class="menu-btn" onclick="openSinglePlayerSetup()">Tek Oyuncu<br><span style="font-size:0.75rem; font-weight:normal;">(Botlara Karşı)</span></button>
         <button class="menu-btn" onclick="openScreen('online-menu')">Online Oyna</button>
         <button class="menu-btn" onclick="openScreen('settings-screen')">Kurallar ve Ayarlar</button>
+        
+        <!-- SÜRÜM YAZISI -->
+        <div style="position: absolute; bottom: 10px; right: 10px; color: rgba(255,255,255,0.5); font-size: 0.8rem; font-weight: bold; z-index: 100;">v0.01</div>
     </div>
 
     <!-- SİNGLE PLAYER SETUP -->
@@ -247,9 +251,7 @@
                 </ul>
             </div>
 
-            <!-- Bilgi Notu (Simülasyon olduğunu hissettirmeyen şık not) -->
             <p id="lobby-wait-text" class="hidden" style="color:#f59e0b; font-size:0.85rem; margin-bottom:15px;">Kurucu oyunu başlatması bekleniyor...</p>
-
             <button class="menu-btn" id="btn-start-online" style="background: #10b981;" onclick="initGameSession()">Başlat</button>
             <button class="menu-btn" onclick="openScreen('main-menu')" style="background: #ef4444;">Ayrıl</button>
         </div>
@@ -339,7 +341,7 @@
     <!-- FİNAL EKRANI -->
     <div id="final-modal" class="screen hidden" style="z-index: 5000; background: rgba(0,0,0,0.95);">
         <div class="menu-box">
-            <h1 style="color:#f59e0b; margin-bottom: 10px;">👑 ŞAMPİYON 👑</h1>
+            <h1 id="final-winner-title" style="color:#f59e0b; margin-bottom: 10px;">👑 ŞAMPİYON 👑</h1>
             <h2 id="final-winner" style="margin-bottom: 20px; font-size: 2.5rem;"></h2>
             <div id="final-scores" style="margin-bottom: 20px; font-size:1.1rem; line-height: 1.8;"></div>
             <button class="menu-btn" style="background: #3b82f6;" onclick="openScreen('main-menu')">Yeni Oyun (Ana Menü)</button>
@@ -347,7 +349,7 @@
     </div>
 
     <!-- DURAKLATMA EKRANI (Menü Butonu İçin) -->
-    <div id="pause-overlay" class="screen hidden" style="z-index: 4000;">
+    <div id="pause-overlay" class="screen hidden" style="z-index: 4000; background: rgba(0,0,0,0.85);">
         <div class="menu-box">
             <h2>Oyun Duraklatıldı</h2>
             <button class="menu-btn" onclick="resumeGame()" style="background: #10b981;">Devam Et</button>
@@ -427,7 +429,7 @@
         let maxPlayers = 4, myName = "Mustafa", difficulty = "normal";
         let rules = { swapCount: 2, plus4Count: 4 };
         let pendingColor = '', pendingSwapTarget = -1, isOnline = false;
-        let roundStarter = -1; // İlk el random, sonrakiler sağa kayar
+        let roundStarter = -1; 
 
         // --- SES MOTORU ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -510,7 +512,6 @@
             document.getElementById('joiner-status').innerText = "Bekleniyor...";
             openScreen('host-lobby');
             
-            // Simüle edilmiş katılım (Host için)
             setTimeout(() => { document.getElementById('joiner-status').innerText = "2. Oyuncu Katıldı"; document.getElementById('joiner-status').style.color = "#10b981"; }, 3000);
         }
         
@@ -542,7 +543,7 @@
         function launchGameSequence() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
-            document.getElementById('bg-anim').classList.add('hidden'); // Oyun içi animasyonu kapat
+            document.getElementById('bg-anim').classList.add('hidden'); 
             document.getElementById('game-arena').classList.remove('hidden');
             document.getElementById('intro-overlay').classList.remove('hidden');
             
@@ -559,8 +560,8 @@
             deck = [];
             colors.forEach(c => {
                 for (let i = 0; i <= 9; i++) { deck.push({ color: c, val: i.toString() }); deck.push({ color: c, val: i.toString() }); }
-                deck.push({ color: c, val: '⇄' }); deck.push({ color: c, val: '⇄' }); // Yön (Standart)
-                deck.push({ color: c, val: '+2' }); deck.push({ color: c, val: '+2' }); // +2 (Standart)
+                deck.push({ color: c, val: '⇄' }); deck.push({ color: c, val: '⇄' }); 
+                deck.push({ color: c, val: '+2' }); deck.push({ color: c, val: '+2' }); 
             });
             for(let i=0; i<rules.swapCount; i++) deck.push({ color: 'wild', val: 'Değiş' });
             for(let i=0; i<rules.plus4Count; i++) deck.push({ color: 'wild', val: '+4' });
@@ -571,7 +572,6 @@
             buildDeck();
             hands = [[], [], [], []];
             
-            // Masayı temizle
             document.getElementById('my-cards').innerHTML = '';
             for (let i = 1; i <= 3; i++) document.getElementById(`cards-${i}`).innerHTML = '';
             document.getElementById('discard-pile').innerHTML = '';
@@ -579,7 +579,6 @@
             
             for(let i=1; i<=3; i++) document.getElementById(`player-${i}`).style.display = (i < maxPlayers) ? 'flex' : 'none';
 
-            // 3 Saniye Hızlı Dağıtım Animasyonu Simülasyonu (Zamanla doldur)
             for (let i = 0; i < 7; i++) { for (let p = 0; p < maxPlayers; p++) hands[p].push(deck.pop()); }
             
             setTimeout(() => {
@@ -590,7 +589,6 @@
                 selectedCardIndex = -1; picoClicked = [false, false, false, false]; direction = 1;
                 hasDrawnThisTurn = false; document.getElementById('btn-pass').classList.add('hidden'); document.getElementById('btn-draw').classList.remove('hidden');
                 
-                // Başlayan kişiyi seç
                 if(roundStarter === -1) roundStarter = Math.floor(Math.random() * maxPlayers);
                 else roundStarter = (roundStarter + 1) % maxPlayers;
                 
@@ -598,7 +596,7 @@
                 updateUI();
                 showToast(`${document.getElementById('name-'+currentPlayer).innerText} başlıyor!`, "success");
                 setTimeout(startTurn, 1000);
-            }, 1000); // 1 sn bekleyip elleri aç
+            }, 1000); 
         }
 
         // --- ANİMASYON ---
@@ -611,7 +609,7 @@
             document.body.appendChild(clone);
             
             setTimeout(() => { clone.style.left = rect2.left + 'px'; clone.style.top = rect2.top + 'px'; }, 20);
-            setTimeout(() => { clone.remove(); callback(); }, 400); // Daha pürüzsüz hız
+            setTimeout(() => { clone.remove(); callback(); }, 400); 
         }
 
         // --- OYUN SIRASI & SÜRE ---
@@ -644,7 +642,7 @@
                         if (currentPlayer === 0) {
                             if (!hasDrawnThisTurn) {
                                 showToast("Süre doldu, kart çekiliyor!", "error");
-                                userDrawCard(true); // Otomatik çeker ve 5 sn verir
+                                userDrawCard(true); 
                             } else {
                                 showToast("Süre doldu, pas geçiliyor.", "error");
                                 passTurn();
@@ -675,10 +673,9 @@
                 }
                 
                 if (card.color === 'wild') {
-                    // El Değiştir veya +4 Modalı
                     document.getElementById('swap-modal').classList.remove('hidden');
                     if(card.val === 'Değiş') document.getElementById('swap-targets').classList.add('hidden');
-                    else document.getElementById('swap-targets').classList.add('hidden'); // +4 için sadece renk
+                    else document.getElementById('swap-targets').classList.add('hidden'); 
                     return; 
                 }
                 executePlay(0, selectedCardIndex);
@@ -709,11 +706,10 @@
                     document.getElementById('discard-pile').style.boxShadow = "none";
                 } else {
                     currentColor = forceWildColor ? forceWildColor : colors[Math.floor(Math.random() * colors.length)];
-                    // Renk yazısı ve glow efekti
                     let colorName = currentColor==='red'?'KIRMIZI':currentColor==='blue'?'MAVİ':currentColor==='green'?'YEŞİL':'SARI';
                     let glowColor = `var(--c-${currentColor}-pure)`;
                     document.getElementById('discard-pile').style.boxShadow = `0 0 30px ${glowColor}, inset 0 0 20px ${glowColor}`;
-                    card.displayWildText = colorName; // Rengi karta yazmak için
+                    card.displayWildText = colorName; 
                 }
 
                 if (card.val === '+2') { 
@@ -731,7 +727,7 @@
                 }
                 else if (card.val === '⇄') { direction *= -1; showToast("Yön Değişti!"); }
 
-                if (hands[pIndex].length === 0 && card.val !== 'Değiş') { roundEnd(pIndex); return; } // Değiş atarsa eli dolabilir
+                if (hands[pIndex].length === 0 && card.val !== 'Değiş') { roundEnd(pIndex); return; } 
                 
                 updateUI();
                 if(skipTurn) { currentPlayer = (currentPlayer + direction + maxPlayers) % maxPlayers; }
@@ -879,13 +875,38 @@
             document.getElementById('scoreboard-modal').classList.add('hidden');
             document.getElementById('pause-overlay').classList.add('hidden');
             
-            let maxScore = -1, winnerName = "";
+            // Tüm geçerli skorları hesapla (katılımcı sayısına göre)
+            let currentScores = scores.slice(0, maxPlayers);
+            let maxScore = Math.max(...currentScores);
+            let winners = [];
+            let allSame = true;
+
+            for (let i = 0; i < maxPlayers; i++) {
+                if (currentScores[i] !== currentScores[0]) allSame = false;
+                if (currentScores[i] === maxScore) {
+                    winners.push(document.getElementById(`name-${i}`).innerText);
+                }
+            }
+
+            let winnerText = "";
+            let titleEl = document.getElementById('final-winner-title');
+            
+            if (allSame) {
+                // Herkesin skoru aynıysa (örneğin herkes 0)
+                winnerText = "Berabere!";
+                titleEl.innerText = "🤝 DOSTLUK KAZANDI 🤝";
+            } else {
+                // 1 kişi veya aynı en yüksek puana sahip 2/3 kişi kazanırsa
+                winnerText = winners.join(" & ");
+                titleEl.innerText = "👑 ŞAMPİYON 👑";
+            }
+
+            document.getElementById('final-winner').innerText = winnerText;
+            
             let html = '';
             for(let i=0; i<maxPlayers; i++) {
-                if(scores[i] > maxScore) { maxScore = scores[i]; winnerName = document.getElementById(`name-${i}`).innerText; }
                 html += `<div>${document.getElementById(`name-${i}`).innerText}: ${scores[i]}</div>`;
             }
-            document.getElementById('final-winner').innerText = winnerName;
             document.getElementById('final-scores').innerHTML = html;
             
             document.getElementById('game-arena').classList.add('hidden');
@@ -898,7 +919,6 @@
             let click = isHand ? `onclick="selectCard(${idx})"` : '';
             let val = c.val; let bgClass = c.color === 'wild' ? 'wild' : c.color;
             
-            // Eğer ortaya atılmış ve rengi seçilmiş bir wild kartsa (Yazı parlaması)
             let centerText = val;
             if(!isHand && c.displayWildText) {
                 centerText = `<span style="font-size:clamp(0.8rem, 2vw, 1rem); color:white;">${c.displayWildText}</span><br>${val}`;
