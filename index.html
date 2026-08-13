@@ -14,7 +14,7 @@
             --c-green: linear-gradient(135deg, #10b981, #047857); --c-yellow: linear-gradient(135deg, #f59e0b, #b45309);
         }
         
-        /* Arka Plan Temaları */
+        /* Arka Plan Temaları (Saf CSS - Hatasız Çalışır) */
         body[data-bg="dark-1"] { --bg-deep: #050505; --table-grad: radial-gradient(circle at 50% 50%, #172a45 0%, #050505 80%); --text: #e2e8f0; }
         body[data-bg="dark-2"] { --bg-deep: #050000; --table-grad: radial-gradient(circle at 50% 50%, #451717 0%, #050000 80%); --text: #e2e8f0; }
         body[data-bg="dark-3"] { --bg-deep: #000500; --table-grad: radial-gradient(circle at 50% 50%, #174522 0%, #000500 80%); --text: #e2e8f0; }
@@ -35,29 +35,37 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: manipulation; }
         
-        /* BEYAZ EKRAN HATASI DÜZELTMESİ (Arka plan zorlaması ve solid fallback) */
-        body { background-color: var(--bg-deep) !important; background: var(--table-grad) !important; color: var(--text); position: fixed; width: 100%; height: 100%; overflow: hidden; user-select: none; }
+        /* BEYAZ EKRAN HATASI KESİN ÇÖZÜMÜ */
+        body { 
+            background: var(--table-grad); 
+            background-attachment: fixed;
+            color: var(--text); 
+            position: fixed; width: 100%; height: 100%; 
+            overflow: hidden; user-select: none; 
+        }
 
-        /* === ARKA PLAN KART ANİMASYONU (KASMA DÜZELTMESİ) === */
-        #bg-anim { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; overflow: hidden; background: transparent !important; }
+        /* === PERFORMANSLI KONFETİ (KART PARÇALARI) ANİMASYONU === */
+        #bg-anim { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; overflow: hidden; }
         .falling-card { 
-            position: absolute; width: 45px; height: 65px; 
-            background: repeating-linear-gradient(45deg, #1e293b, #1e293b 5px, #0f172a 5px, #0f172a 10px); 
-            border: 2px solid #fff; border-radius: 5px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); 
-            animation: fall 8s linear infinite; transform-style: preserve-3d;
-            /* Performans artırıcılar (Kasmayı engeller) */
+            position: absolute; 
+            width: 15px; height: 25px; /* Küçük konfetiler */
+            border-radius: 3px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            animation: fall linear infinite; 
+            /* Performans artırıcı - Sıfır kasma */
             will-change: transform; 
             backface-visibility: hidden;
         }
         @keyframes fall {
-            0% { transform: translateY(-10vh) rotateX(0deg) rotateY(0deg) rotateZ(0deg); opacity: 0.8; }
+            0% { transform: translateY(-10vh) rotateX(0deg) rotateY(0deg) rotateZ(0deg); opacity: 0.9; }
             100% { transform: translateY(110vh) rotateX(360deg) rotateY(720deg) rotateZ(180deg); opacity: 0; }
         }
 
         /* === GENEL MENÜ ARAYÜZÜ === */
-        /* Screen arka plan hatası için transparent yapıldı ve buglara karşı rgba(0,0,0,0.1) eklendi */
-        .screen { position: absolute; width: 100%; height: 100%; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.1) !important; backdrop-filter: blur(5px); }
+        /* Arkaplan transparent, sadece menü kutusu görünür. (Beyazlık yapmaz) */
+        .screen { position: absolute; width: 100%; height: 100%; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .hidden { display: none !important; }
+        
         .pico-title { font-size: clamp(4rem, 12vw, 7rem); margin-bottom: 20px; letter-spacing: 5px; font-style: italic; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5), 0 0 20px #ef4444, 0 0 40px #ef4444; }
         .menu-btn { padding: 12px 25px; margin: 8px; background: rgba(0,0,0,0.4); border: 2px solid var(--text); color: var(--text); cursor: pointer; border-radius: 8px; font-size: 1.1rem; font-weight: bold; transition: 0.3s; width: 280px; max-width: 85vw; z-index: 20; }
         .menu-btn:hover { background: var(--text); color: var(--bg-deep); transform: scale(1.05); }
@@ -81,7 +89,7 @@
         @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
 
         /* === OYUN İÇİ ARAYÜZ === */
-        #game-arena { position: relative; width: 100%; height: 100%; background: transparent !important; }
+        #game-arena { position: relative; width: 100%; height: 100%; }
         #top-bar-left { position: absolute; top: 10px; left: 10px; z-index: 3000; }
         .top-btn { background: rgba(0,0,0,0.7); color: white; border: 2px solid rgba(255,255,255,0.3); padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
         
@@ -145,10 +153,24 @@
         #btn-pico { background: #ef4444; border-color: #b91c1c; } #btn-pico:hover { background: #dc2626; }
         #btn-pass { background: #f59e0b; border-color: #b45309; } #btn-pass:hover { background: #d97706; }
 
-        /* INTRO VE ANİMASYONLAR */
-        #intro-overlay { position: absolute; width: 100%; height: 100%; background: var(--table-grad) !important; z-index: 500; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s; pointer-events: none; }
-        .intro-text { font-size: clamp(4rem, 15vw, 8rem); font-weight: bold; color: #ef4444; letter-spacing: 10px; font-style: italic; text-shadow: 0 0 50px #ef4444; animation: introAnim 2.5s forwards; }
-        @keyframes introAnim { 0% { transform: scale(3); opacity: 0; } 20% { transform: scale(1); opacity: 1; } 80% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.1); opacity: 0; } }
+        /* INTRO / PROFESYONEL LOADING EKRANI */
+        #intro-overlay { 
+            position: absolute; width: 100%; height: 100%; 
+            background: var(--table-grad); /* Arka plandaki temanın ta kendisi! */
+            z-index: 5000; display: flex; justify-content: center; align-items: center; 
+            transition: opacity 0.5s ease; pointer-events: none; 
+        }
+        .intro-text { 
+            font-size: clamp(4rem, 15vw, 8rem); font-weight: bold; color: #ef4444; 
+            letter-spacing: 10px; font-style: italic; text-shadow: 0 0 50px #ef4444; 
+            animation: introAnim 2s forwards; 
+        }
+        @keyframes introAnim { 
+            0% { transform: scale(3); opacity: 0; } 
+            20% { transform: scale(1); opacity: 1; } 
+            80% { transform: scale(1); opacity: 1; } 
+            100% { transform: scale(0.8); opacity: 0; } 
+        }
         
         .anim-card { position: absolute; z-index: 1000; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); pointer-events: none; }
         
@@ -166,6 +188,7 @@
 </head>
 <body data-bg="dark-1" data-card="1">
 
+    <!-- KONFETİ YAĞMURU (Performanslı) -->
     <div id="bg-anim"></div>
 
     <div id="sound-btn-global" onclick="toggleSound()">
@@ -316,7 +339,7 @@
     </div>
 
     <!-- EL DEĞİŞTİRME & RENK SEÇİMİ MODALI -->
-    <div id="swap-modal" class="screen hidden" style="z-index: 4000; background: rgba(0,0,0,0.85) !important;">
+    <div id="swap-modal" class="screen hidden" style="z-index: 4000; background: rgba(0,0,0,0.85);">
         <div class="menu-box">
             <h2>El Değiştir</h2>
             <p style="margin-bottom: 15px;">Önce yeni rengi, sonra kiminle kartlarını değiştireceğini seç.</p>
@@ -337,7 +360,7 @@
     </div>
 
     <!-- SKORBOARD MODALI -->
-    <div id="scoreboard-modal" class="screen hidden" style="z-index: 4500; background: rgba(0,0,0,0.9) !important;">
+    <div id="scoreboard-modal" class="screen hidden" style="z-index: 4500; background: rgba(0,0,0,0.9);">
         <div class="menu-box">
             <h2>Tur Bitti!</h2>
             <div id="score-list" style="margin: 20px 0; font-size:1.2rem; line-height: 2;"></div>
@@ -347,7 +370,7 @@
     </div>
     
     <!-- FİNAL EKRANI -->
-    <div id="final-modal" class="screen hidden" style="z-index: 5000; background: rgba(0,0,0,0.95) !important;">
+    <div id="final-modal" class="screen hidden" style="z-index: 5000; background: rgba(0,0,0,0.95);">
         <div class="menu-box">
             <h1 id="final-winner-title" style="color:#f59e0b; margin-bottom: 10px;">👑 ŞAMPİYON 👑</h1>
             <h2 id="final-winner" style="margin-bottom: 20px; font-size: 2.5rem;"></h2>
@@ -356,8 +379,8 @@
         </div>
     </div>
 
-    <!-- DURAKLATMA EKRANI (Menü Butonu İçin) -->
-    <div id="pause-overlay" class="screen hidden" style="z-index: 4000; background: rgba(0,0,0,0.85) !important;">
+    <!-- DURAKLATMA EKRANI -->
+    <div id="pause-overlay" class="screen hidden" style="z-index: 4000; background: rgba(0,0,0,0.85);">
         <div class="menu-box">
             <h2>Oyun Duraklatıldı</h2>
             <button class="menu-btn" onclick="resumeGame()" style="background: #10b981;">Devam Et</button>
@@ -365,7 +388,7 @@
         </div>
     </div>
 
-    <!-- INTRO OVERLAY -->
+    <!-- PROFESYONEL LOADING EKRANI -->
     <div id="intro-overlay" class="hidden">
         <div class="intro-text">Pico</div>
     </div>
@@ -468,15 +491,17 @@
             if (soundEnabled && audioCtx.state === 'suspended') audioCtx.resume();
         }
 
-        // --- ARKA PLAN KART ANİMASYONU ---
+        // --- ARKA PLAN KONFETİ (SIFIR KASMA) ---
         function createFallingCards() {
             const container = document.getElementById('bg-anim');
-            for(let i=0; i<12; i++) {
+            const bgColors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b']; // Uno renkleri
+            for(let i=0; i<30; i++) {
                 let card = document.createElement('div');
                 card.className = 'falling-card';
+                card.style.backgroundColor = bgColors[Math.floor(Math.random() * bgColors.length)];
                 card.style.left = Math.random() * 100 + 'vw';
-                card.style.animationDuration = (6 + Math.random() * 5) + 's';
-                card.style.animationDelay = (Math.random() * 5) + 's';
+                card.style.animationDuration = (3 + Math.random() * 4) + 's';
+                card.style.animationDelay = '-' + (Math.random() * 5) + 's'; // Anında ekranda başlasınlar
                 container.appendChild(card);
             }
         }
@@ -485,6 +510,7 @@
         // --- ARAYÜZ YÖNETİMİ ---
         function openScreen(id) { document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
         function changeTheme() { 
+            // Direkt HTML niteliklerini değiştiriyoruz. (Saf CSS devrede!)
             document.body.setAttribute('data-bg', document.getElementById('setting-bg').value); 
             document.body.setAttribute('data-card', document.getElementById('setting-card').value); 
         }
@@ -553,18 +579,23 @@
 
         function launchGameSequence() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
+            
+            // Profesyonel Loading Ekranı (Tüm ekranı kapatır, setup'ı gizler)
+            let introOverlay = document.getElementById('intro-overlay');
+            introOverlay.style.opacity = '1';
+            introOverlay.classList.remove('hidden');
+            
+            document.querySelectorAll('.screen').forEach(el => {
+                if(el.id !== 'intro-overlay') el.classList.add('hidden');
+            });
             document.getElementById('bg-anim').classList.add('hidden'); 
             document.getElementById('game-arena').classList.remove('hidden');
-            document.getElementById('intro-overlay').classList.remove('hidden');
             
             document.getElementById('name-0').innerText = myName;
             for(let i=1; i<4; i++) document.getElementById(`name-${i}`).innerText = isOnline ? `Oyuncu ${i+1}` : `Bot ${i}`;
             
-            setTimeout(() => {
-                document.getElementById('intro-overlay').classList.add('hidden');
-                gameActive = true; initRound();
-            }, 2500);
+            // Kartları ve masayı arka planda anında (isFirstSetup=true) diz!
+            initRound(true);
         }
 
         function buildDeck() {
@@ -579,7 +610,7 @@
             deck.sort(() => Math.random() - 0.5);
         }
 
-        function initRound() {
+        function initRound(isFirstSetup = false) {
             buildDeck();
             hands = [[], [], [], []];
             
@@ -590,24 +621,42 @@
             
             for(let i=1; i<=3; i++) document.getElementById(`player-${i}`).style.display = (i < maxPlayers) ? 'flex' : 'none';
 
+            // Masayı anında kuruyoruz. Loading arkasında her şey hazır ediliyor.
             for (let i = 0; i < 7; i++) { for (let p = 0; p < maxPlayers; p++) hands[p].push(deck.pop()); }
             
-            setTimeout(() => {
-                let firstCard = deck.pop();
-                while(['Değiş', '+2', '+4', '⇄'].includes(firstCard.val) || firstCard.color === 'wild') { deck.unshift(firstCard); firstCard = deck.pop(); }
-                discardPile = [firstCard]; currentColor = firstCard.color;
-                
-                selectedCardIndex = -1; picoClicked = [false, false, false, false]; direction = 1;
-                hasDrawnThisTurn = false; document.getElementById('btn-pass').classList.add('hidden'); document.getElementById('btn-draw').classList.remove('hidden');
-                
-                if(roundStarter === -1) roundStarter = Math.floor(Math.random() * maxPlayers);
-                else roundStarter = (roundStarter + 1) % maxPlayers;
-                
-                currentPlayer = roundStarter;
-                updateUI();
-                showToast(`${document.getElementById('name-'+currentPlayer).innerText} başlıyor!`, "success");
-                setTimeout(startTurn, 1000);
-            }, 1000); 
+            let firstCard = deck.pop();
+            while(['Değiş', '+2', '+4', '⇄'].includes(firstCard.val) || firstCard.color === 'wild') { deck.unshift(firstCard); firstCard = deck.pop(); }
+            discardPile = [firstCard]; currentColor = firstCard.color;
+            
+            selectedCardIndex = -1; picoClicked = [false, false, false, false]; direction = 1;
+            hasDrawnThisTurn = false; document.getElementById('btn-pass').classList.add('hidden'); document.getElementById('btn-draw').classList.remove('hidden');
+            
+            if(roundStarter === -1) roundStarter = Math.floor(Math.random() * maxPlayers);
+            else roundStarter = (roundStarter + 1) % maxPlayers;
+            
+            currentPlayer = roundStarter;
+            updateUI(); // Masa tamamlandı! Ekranda görünmüyor çünkü loading var.
+            
+            if (isFirstSetup) {
+                // Intro animasyonunun (Pico yazısı) bitmesini bekleyip, masayı zarifçe göster.
+                setTimeout(() => {
+                    let intro = document.getElementById('intro-overlay');
+                    intro.style.opacity = '0'; // Yavaşça masayı aç
+                    setTimeout(() => {
+                        intro.classList.add('hidden');
+                        startGamePlay();
+                    }, 500);
+                }, 2000);
+            } else {
+                // 2. Turlar direkt başlar.
+                startGamePlay();
+            }
+        }
+        
+        function startGamePlay() {
+            showToast(`${document.getElementById('name-'+currentPlayer).innerText} başlıyor!`, "success");
+            gameActive = true;
+            setTimeout(startTurn, 1000);
         }
 
         // --- ANİMASYON ---
@@ -746,7 +795,7 @@
             });
         }
 
-        // --- SWAP / WILD MODAL LOGIC (PLAYER) ---
+        // --- SWAP / WILD MODAL LOGIC ---
         function selectSwapTarget() {
             let card = hands[0][selectedCardIndex];
             if(card.val === '+4') {
@@ -917,7 +966,7 @@
             
             document.getElementById('game-arena').classList.add('hidden');
             document.getElementById('final-modal').classList.remove('hidden');
-            document.getElementById('bg-anim').classList.remove('hidden'); // Menüye dönünce animasyon açılsın
+            document.getElementById('bg-anim').classList.remove('hidden');
         }
 
         // --- RENDER ---
