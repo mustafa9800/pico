@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pico</title>
+    <style>
+        /* === TEMALAR VE RENKLER === */
+        :root {
+            --bg-deep: #050505; --table-grad: radial-gradient(circle at 50% 50%, #172a45 0%, #050505 80%);
+            --text: #e2e8f0; --menu-bg: rgba(0,0,0,0.7);
+            --c-red-pure: #ef4444; --c-blue-pure: #3b82f6; --c-green-pure: #10b981; --c-yellow-pure: #f59e0b;
+            --c-red: linear-gradient(135deg, #ef4444, #b91c1c); --c-blue: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            --c-green: linear-gradient(135deg, #10b981, #047857); --c-yellow: linear-gradient(135deg, #f59e0b, #b45309);
+        }
+        
+        /* Arka Plan Temaları */
+        body[data-bg="dark-1"] { --bg-deep: #050505; --table-grad: radial-gradient(circle at 50% 50%, #172a45 0%, #050505 80%); --text: #e2e8f0; }
+        body[data-bg="dark-2"] { --bg-deep: #050000; --table-grad: radial-gradient(circle at 50% 50%, #451717 0%, #050000 80%); --text: #e2e8f0; }
+        body[data-bg="dark-3"] { --bg-deep: #000500; --table-grad: radial-gradient(circle at 50% 50%, #174522 0%, #000500 80%); --text: #e2e8f0; }
+        body[data-bg="dark-4"] { --bg-deep: #050010; --table-grad: radial-gradient(circle at 50% 50%, #301745 0%, #050010 80%); --text: #e2e8f0; }
+        body[data-bg="dark-5"] { --bg-deep: #000000; --table-grad: radial-gradient(circle at 50% 50%, #2c3e50 0%, #000000 80%); --text: #e2e8f0; }
+        body[data-bg="light-1"] { --bg-deep: #f0f8ff; --table-grad: radial-gradient(circle at 50% 50%, #87ceeb 0%, #f0f8ff 80%); --text: #1e293b; --menu-bg: rgba(255,255,255,0.9); }
+        body[data-bg="light-2"] { --bg-deep: #f0fff0; --table-grad: radial-gradient(circle at 50% 50%, #98ff98 0%, #f0fff0 80%); --text: #1e293b; --menu-bg: rgba(255,255,255,0.9); }
+        body[data-bg="light-3"] { --bg-deep: #fff5ee; --table-grad: radial-gradient(circle at 50% 50%, #ffdab9 0%, #fff5ee 80%); --text: #1e293b; --menu-bg: rgba(255,255,255,0.9); }
+        body[data-bg="light-4"] { --bg-deep: #f8f8ff; --table-grad: radial-gradient(circle at 50% 50%, #e6e6fa 0%, #f8f8ff 80%); --text: #1e293b; --menu-bg: rgba(255,255,255,0.9); }
+        body[data-bg="light-5"] { --bg-deep: #ffffff; --table-grad: radial-gradient(circle at 50% 50%, #cccccc 0%, #ffffff 80%); --text: #1e293b; --menu-bg: rgba(255,255,255,0.9); }
+
+        /* Kart Temaları */
+        body[data-card="1"] {} 
+        body[data-card="2"] { --c-red-pure: #ff0000; --c-blue-pure: #0000ff; --c-green-pure: #00aa00; --c-yellow-pure: #ffcc00; --c-red: #ff0000; --c-blue: #0000ff; --c-green: #00aa00; --c-yellow: #ffcc00; } 
+        body[data-card="3"] { --c-red-pure: #8b0000; --c-blue-pure: #00008b; --c-green-pure: #006400; --c-yellow-pure: #b8860b; --c-red: #8b0000; --c-blue: #00008b; --c-green: #006400; --c-yellow: #b8860b; } 
+        body[data-card="4"] { --c-red-pure: #ff1493; --c-blue-pure: #00ffff; --c-green-pure: #39ff14; --c-yellow-pure: #ff4500; --c-red: #ff1493; --c-blue: #00ffff; --c-green: #39ff14; --c-yellow: #ff4500; } 
+        body[data-card="5"] { --c-red-pure: #ffb6c1; --c-blue-pure: #add8e6; --c-green-pure: #98fb98; --c-yellow-pure: #f0e68c; --c-red: #ffb6c1; --c-blue: #add8e6; --c-green: #98fb98; --c-yellow: #f0e68c; } 
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: manipulation; }
+        body { background: var(--table-grad); color: var(--text); position: fixed; width: 100%; height: 100%; overflow: hidden; user-select: none; }
+
+        /* === ARKA PLAN KART ANİMASYONU === */
+        #bg-anim { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; overflow: hidden; }
+        .falling-card { position: absolute; width: 45px; height: 65px; background: repeating-linear-gradient(45deg, #1e293b, #1e293b 5px, #0f172a 5px, #0f172a 10px); border: 2px solid #fff; border-radius: 5px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); animation: fall 8s linear infinite; transform-style: preserve-3d; }
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotateX(0deg) rotateY(0deg) rotateZ(0deg); opacity: 0.8; }
+            100% { transform: translateY(110vh) rotateX(360deg) rotateY(720deg) rotateZ(180deg); opacity: 0; }
+        }
+
+        /* === GENEL MENÜ ARAYÜZÜ === */
+        .screen { position: absolute; width: 100%; height: 100%; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--table-grad); backdrop-filter: blur(5px); }
+        .hidden { display: none !important; }
+        .pico-title { font-size: clamp(4rem, 12vw, 7rem); margin-bottom: 20px; letter-spacing: 5px; font-style: italic; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5), 0 0 20px #ef4444, 0 0 40px #ef4444; }
+        .menu-btn { padding: 12px 25px; margin: 8px; background: rgba(0,0,0,0.4); border: 2px solid var(--text); color: var(--text); cursor: pointer; border-radius: 8px; font-size: 1.1rem; font-weight: bold; transition: 0.3s; width: 280px; max-width: 85vw; z-index: 20; }
+        .menu-btn:hover { background: var(--text); color: var(--bg-deep); transform: scale(1.05); }
+        .menu-box { background: var(--menu-bg); padding: 25px; border-radius: 15px; border: 1px solid rgba(150,150,150,0.3); text-align: center; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 90%; max-width: 450px; z-index: 20; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; font-size: 0.9rem; margin-bottom: 5px; font-weight: bold; }
+        .menu-input { padding: 10px; width: 100%; font-size: 1rem; border-radius: 5px; border: 1px solid #777; background: rgba(0,0,0,0.3); color: var(--text); }
+        select.menu-input option { background-color: #1e293b; color: white; } 
+        .row { display: flex; gap: 10px; } .col { flex: 1; }
+
+        /* Yeni Ses Butonu */
+        #sound-btn-global { position: absolute; top: 15px; right: 15px; z-index: 1000; background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; transition: 0.3s; }
+        #sound-btn-global:hover { background: rgba(255,255,255,0.2); }
+        #sound-btn-global svg { width: 24px; height: 24px; fill: white; }
+
+        /* TOAST BİLDİRİMLERİ */
+        #toast-container { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; align-items: center; pointer-events: none; }
+        .toast { background: rgba(0,0,0,0.9); color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; font-size: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.5); animation: slideDown 0.3s ease-out; border: 2px solid #334155; text-align: center; }
+        .toast.error { border-color: #ef4444; color: #fca5a5; }
+        .toast.success { border-color: #10b981; color: #a7f3d0; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* === OYUN İÇİ ARAYÜZ === */
+        #game-arena { position: relative; width: 100%; height: 100%; }
+        #top-bar-left { position: absolute; top: 10px; left: 10px; z-index: 3000; }
+        .top-btn { background: rgba(0,0,0,0.7); color: white; border: 2px solid rgba(255,255,255,0.3); padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+        
+        .player-area { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 10; transition: 0.3s; }
+        .player-info { display: flex; flex-direction: column; align-items: center; padding: 5px; border-radius: 10px; transition: 0.3s; }
+        .player-name { background: rgba(0,0,0,0.7); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); }
+        .active-turn { box-shadow: 0 0 20px #60a5fa; background: rgba(96, 165, 250, 0.2); transform: scale(1.1); border-color: #60a5fa; }
+        .active-turn .player-name { color: #60a5fa; border-color: #60a5fa; }
+        
+        .timer-bar-container { width: 80px; height: 6px; background: rgba(0,0,0,0.5); border-radius: 3px; overflow: hidden; display: none; margin-top: 3px; }
+        .timer-bar { height: 100%; background: #10b981; transition: width 1s linear; }
+
+        .bot-cards-wrapper { display: flex; justify-content: center; align-items: center; }
+        .bot-hand-horizontal { display: flex; flex-direction: row; gap: -20px; }
+        .bot-hand-vertical { display: flex; flex-direction: column; gap: -30px; }
+        
+        #player-2 { top: 5%; left: 50%; transform: translateX(-50%); } 
+        #player-1 { top: 40%; right: 2%; transform: translateY(-50%); } 
+        #player-3 { top: 40%; left: 2%; transform: translateY(-50%); } 
+
+        .bot-hand-horizontal .card-back { margin-left: -20px; } .bot-hand-horizontal .card-back:first-child { margin-left: 0; }
+        .bot-hand-vertical .card-back { margin-top: -30px; transform: rotate(90deg); } .bot-hand-vertical .card-back:first-child { margin-top: 0; }
+
+        /* KART TASARIMLARI */
+        .card { width: 12vw; max-width: 75px; min-width: 50px; aspect-ratio: 75/110; border-radius: 6px; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.5); background: #1e293b; color: white; flex-shrink: 0; transition: transform 0.2s, box-shadow 0.2s; user-select: none; }
+        .card.red { background: var(--c-red); }
+        .card.blue { background: var(--c-blue); }
+        .card.green { background: var(--c-green); }
+        .card.yellow { background: var(--c-yellow); }
+        .card.wild { background: conic-gradient(var(--c-red-pure) 0deg 90deg, var(--c-blue-pure) 90deg 180deg, var(--c-green-pure) 180deg 270deg, var(--c-yellow-pure) 270deg 360deg); }
+        
+        .corner-tl { position: absolute; top: 3px; left: 4px; font-size: clamp(0.7rem, 2vw, 1rem); font-weight: bold; text-shadow: 1px 1px 3px black; }
+        .corner-br { position: absolute; bottom: 3px; right: 4px; font-size: clamp(0.7rem, 2vw, 1rem); font-weight: bold; transform: rotate(180deg); text-shadow: 1px 1px 3px black; }
+        .card-ellipse { width: 75%; height: 60%; background: rgba(255, 255, 255, 0.2); border-radius: 50% / 40%; display: flex; justify-content: center; align-items: center; transform: rotate(-25deg); box-shadow: inset 0 2px 5px rgba(0,0,0,0.3); text-align: center; }
+        .card-value { font-size: clamp(1.2rem, 4vw, 2.2rem); font-weight: bold; color: white; text-shadow: 2px 2px 5px rgba(0,0,0,0.8); transform: rotate(25deg); line-height: 1; }
+
+        .card-back { width: 10vw; max-width: 55px; min-width: 35px; aspect-ratio: 75/110; border-radius: 5px; border: 2px solid #fff; background: repeating-linear-gradient(45deg, #1e293b, #1e293b 5px, #0f172a 5px, #0f172a 10px); display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); position: relative; }
+        .card-back::after { content: "Pico"; position: absolute; font-weight: bold; font-size: clamp(0.6rem, 1.5vw, 0.9rem); color: #ef4444; background: rgba(0,0,0,0.8); padding: 2px 4px; border-radius: 8px; transform: rotate(-25deg); border: 1px solid #ef4444; }
+
+        /* BİZİM ALANIMIZ VE KART ARALIKLARI */
+        #player-0 { bottom: 10px; left: 50%; transform: translateX(-50%); width: 100%; z-index: 20; }
+        #my-cards { display: flex; gap: 0; justify-content: center; align-items: flex-end; height: 20vh; max-width: 95vw; margin: 0 auto 5px auto; overflow: visible; }
+        #my-cards .card { height: 100%; max-height: 140px; width: auto; aspect-ratio: 75 / 110; margin-left: -15px; position: relative; z-index: 1; }
+        #my-cards .card:first-child { margin-left: 0; }
+        #my-cards .card:hover { transform: translateY(-20px); z-index: 50; }
+        #my-cards .card.selected { transform: translateY(-30px) scale(1.05); border-color: #f59e0b; box-shadow: 0 0 25px #f59e0b; z-index: 100; }
+        
+        /* ORTA ALAN */
+        #center-pile { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); display: flex; gap: 20px; align-items: center; z-index: 5; }
+        .stack-3d { box-shadow: 1px 1px 0 #fff, 2px 2px 0 #1e293b, 3px 3px 0 #fff, 4px 4px 0 #1e293b, 5px 5px 10px rgba(0,0,0,0.8); }
+        #deck.card { width: 14vw; max-width: 90px; min-width: 60px; aspect-ratio: 75/110; background: repeating-linear-gradient(45deg, #0f172a, #0f172a 8px, #1e293b 8px, #1e293b 16px); }
+        #deck .card-ellipse { background: #ef4444; } #deck .card-value { font-size: clamp(1rem, 3vw, 1.4rem); }
+        #discard-pile { position: relative; width: 14vw; max-width: 90px; min-width: 60px; aspect-ratio: 75/110; border-radius: 8px; transition: box-shadow 0.3s; }
+        #discard-pile .card { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+        /* KONTROLLER VE PAS BUTONU */
+        #controls-row { display: flex; gap: 8px; align-items: center; justify-content: center; }
+        .game-btn { padding: 10px 18px; font-size: 0.9rem; cursor: pointer; background: #334155; color: white; border: 2px solid #475569; border-radius: 8px; font-weight: bold; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .game-btn:hover { background: #475569; transform: scale(1.05); }
+        #btn-play { background: #10b981; border-color: #059669; } #btn-play:hover { background: #059669; }
+        #btn-pico { background: #ef4444; border-color: #b91c1c; } #btn-pico:hover { background: #dc2626; }
+        #btn-pass { background: #f59e0b; border-color: #b45309; } #btn-pass:hover { background: #d97706; }
+
+        /* INTRO VE ANİMASYONLAR */
+        #intro-overlay { position: absolute; width: 100%; height: 100%; background: var(--bg-deep); z-index: 500; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s; pointer-events: none; }
+        .intro-text { font-size: clamp(4rem, 15vw, 8rem); font-weight: bold; color: #ef4444; letter-spacing: 10px; font-style: italic; text-shadow: 0 0 50px #ef4444; animation: introAnim 2.5s forwards; }
+        @keyframes introAnim { 0% { transform: scale(3); opacity: 0; } 20% { transform: scale(1); opacity: 1; } 80% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.1); opacity: 0; } }
+        
+        .anim-card { position: absolute; z-index: 1000; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); pointer-events: none; }
+        
+        /* Modal ve Modüller */
+        .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .modal-btn { padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; text-shadow: 1px 1px 2px black; }
+
+        @media (max-width: 600px) {
+            .menu-box { padding: 15px; }
+            .menu-btn { padding: 10px 15px; font-size: 1rem; }
+            #player-1 { right: 2%; } #player-3 { left: 2%; }
+            #my-cards .card { margin-left: -20px; }
+        }
+    </style>
+</head>
+<body data-bg="dark-1" data-card="1">
+
+    <div id="bg-anim"></div>
+
+    <div id="sound-btn-global" onclick="toggleSound()">
+        <!-- Açık İkonu -->
+        <svg id="sound-on-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+        <!-- Kapalı İkonu -->
+        <svg id="sound-off-icon" class="hidden" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+    </div>
+    
+    <div id="toast-container"></div>
+
+    <!-- ANA MENÜ -->
+    <div id="main-menu" class="screen">
+        <h1 class="pico-title">Pico</h1>
+        <button class="menu-btn" onclick="openSinglePlayerSetup()">Tek Oyuncu<br><span style="font-size:0.75rem; font-weight:normal;">(Botlara Karşı)</span></button>
+        <button class="menu-btn" onclick="openScreen('online-menu')">Online Oyna</button>
+        <button class="menu-btn" onclick="openScreen('settings-screen')">Kurallar ve Ayarlar</button>
+    </div>
+
+    <!-- SİNGLE PLAYER SETUP -->
+    <div id="single-setup" class="screen hidden">
+        <div class="menu-box">
+            <h2>Tek Oyuncu</h2>
+            <div class="input-group" style="margin-top:20px;">
+                <label>Oyun Zorluğu (Şans & Zeka):</label>
+                <select id="single-diff" class="menu-input">
+                    <option value="easy">Kolay (Şans senden yana)</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="hard">Zor (Acımasız botlar)</option>
+                </select>
+            </div>
+            <button class="menu-btn" style="background: #10b981;" onclick="startSingleGame()">Oyunu Başlat</button>
+            <button class="menu-btn" onclick="openScreen('main-menu')" style="background: #ef4444;">Geri Dön</button>
+        </div>
+    </div>
+
+    <!-- ONLİNE MENÜ -->
+    <div id="online-menu" class="screen hidden">
+        <div class="menu-box">
+            <h2 style="margin-bottom: 20px;">Online Pico</h2>
+            <button class="menu-btn" onclick="hostGame()">Oyun Kur (Host)</button>
+            <button class="menu-btn" onclick="openScreen('join-lobby')">Oyuna Katıl</button>
+            <button class="menu-btn" onclick="openScreen('main-menu')" style="background: #ef4444;">Geri Dön</button>
+        </div>
+    </div>
+
+    <!-- KATILMA LOBİSİ -->
+    <div id="join-lobby" class="screen hidden">
+        <div class="menu-box">
+            <h2>Oyuna Katıl</h2>
+            <div class="input-group" style="margin-top:20px;">
+                <label>5 Haneli Oda Kodu:</label>
+                <input type="number" id="room-code-input" class="menu-input" placeholder="Örn: 58291">
+            </div>
+            <button class="menu-btn" style="background: #10b981;" onclick="joinSimulatedGame()">Katıl</button>
+            <button class="menu-btn" onclick="openScreen('online-menu')" style="background: #ef4444;">Geri</button>
+        </div>
+    </div>
+
+    <!-- HOST / BEKLEME LOBİSİ -->
+    <div id="host-lobby" class="screen hidden">
+        <div class="menu-box">
+            <h2>Oyun Lobisi</h2>
+            <p style="color:#60a5fa; font-weight:bold; font-size:2rem; margin:15px 0; letter-spacing: 5px;" id="random-code"></p>
+            
+            <div id="host-controls">
+                <div class="input-group">
+                    <label>Toplam Oyuncu (Bot Dahil):</label>
+                    <select id="player-count" class="menu-input">
+                        <option value="2">2 Kişi</option>
+                        <option value="3">3 Kişi</option>
+                        <option value="4" selected>4 Kişi</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Bot Zorluğu:</label>
+                    <select id="host-bot-diff" class="menu-input">
+                        <option value="easy">Kolay</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="hard">Zor</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div style="margin: 20px 0; padding: 10px; background: rgba(0,0,0,0.5); border-radius: 8px;">
+                <h4 style="margin-bottom: 10px;">Katılımcılar</h4>
+                <ul id="lobby-players" style="list-style:none; font-size:0.9rem; line-height:1.5;">
+                    <li style="color:#10b981;">1. <span id="lobby-my-name">Mustafa</span> (Host)</li>
+                    <li id="joiner-status" style="color:#aaa;">Bekleniyor...</li>
+                </ul>
+            </div>
+
+            <!-- Bilgi Notu (Simülasyon olduğunu hissettirmeyen şık not) -->
+            <p id="lobby-wait-text" class="hidden" style="color:#f59e0b; font-size:0.85rem; margin-bottom:15px;">Kurucu oyunu başlatması bekleniyor...</p>
+
+            <button class="menu-btn" id="btn-start-online" style="background: #10b981;" onclick="initGameSession()">Başlat</button>
+            <button class="menu-btn" onclick="openScreen('main-menu')" style="background: #ef4444;">Ayrıl</button>
+        </div>
+    </div>
+
+    <!-- AYARLAR VE KURALLAR -->
+    <div id="settings-screen" class="screen hidden">
+        <div class="menu-box">
+            <h2 style="margin-bottom: 15px;">Ayarlar</h2>
+            <div class="input-group">
+                <label>Oyuncu Adınız:</label>
+                <input type="text" id="setting-name" class="menu-input" value="Mustafa">
+            </div>
+            <div class="row">
+                <div class="input-group col">
+                    <label>Arka Plan Teması:</label>
+                    <select id="setting-bg" class="menu-input" onchange="changeTheme()">
+                        <option value="dark-1" selected>Koyu 1 (Lacivert)</option>
+                        <option value="dark-2">Koyu 2 (Kızıl)</option>
+                        <option value="dark-3">Koyu 3 (Orman)</option>
+                        <option value="dark-4">Koyu 4 (Mor)</option>
+                        <option value="dark-5">Koyu 5 (Karbon)</option>
+                        <option value="light-1">Açık 1 (Gök Mavisi)</option>
+                        <option value="light-2">Açık 2 (Nane)</option>
+                        <option value="light-3">Açık 3 (Şeftali)</option>
+                        <option value="light-4">Açık 4 (Lavanta)</option>
+                        <option value="light-5">Açık 5 (Gümüş)</option>
+                    </select>
+                </div>
+                <div class="input-group col">
+                    <label>Kart Teması:</label>
+                    <select id="setting-card" class="menu-input" onchange="changeTheme()">
+                        <option value="1" selected>Tema 1 (Klasik)</option>
+                        <option value="2">Tema 2 (Canlı Renkler)</option>
+                        <option value="3">Tema 3 (Koyu Mat)</option>
+                        <option value="4">Tema 4 (Neon Parlak)</option>
+                        <option value="5">Tema 5 (Pastel)</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3 style="margin: 20px 0 10px 0; font-size:1.1rem; border-bottom:1px solid #777;">Özel Kurallar</h3>
+            <div class="input-group row" style="align-items: center;">
+                <label style="margin:0; flex:1;">El Değiştirme Kartı Sayısı:</label>
+                <input type="number" id="rule-swap-count" class="menu-input" value="2" min="0" max="4" style="width:60px;">
+            </div>
+            <div class="input-group row" style="align-items: center;">
+                <label style="margin:0; flex:1;">+4 Kartı Sayısı:</label>
+                <input type="number" id="rule-plus4-count" class="menu-input" value="4" min="0" max="8" style="width:60px;">
+            </div>
+            <p style="font-size:0.7rem; color:#aaa;">Not: Yön değiştirme ve +2 kartları standart adette destede sabittir.</p>
+            <button class="menu-btn" onclick="saveSettings()" style="background: #10b981; margin-top:20px;">Kaydet ve Çık</button>
+        </div>
+    </div>
+
+    <!-- EL DEĞİŞTİRME & RENK SEÇİMİ MODALI -->
+    <div id="swap-modal" class="screen hidden" style="z-index: 4000; background: rgba(0,0,0,0.85);">
+        <div class="menu-box">
+            <h2>El Değiştir</h2>
+            <p style="margin-bottom: 15px;">Önce yeni rengi, sonra kiminle kartlarını değiştireceğini seç.</p>
+            
+            <h4 style="margin-bottom: 5px;">1. Renk Seç</h4>
+            <div class="modal-grid" style="margin-bottom: 20px;">
+                <button class="modal-btn" style="background:var(--c-red-pure);" onclick="pendingColor='red'; selectSwapTarget()">Kırmızı</button>
+                <button class="modal-btn" style="background:var(--c-blue-pure);" onclick="pendingColor='blue'; selectSwapTarget()">Mavi</button>
+                <button class="modal-btn" style="background:var(--c-green-pure);" onclick="pendingColor='green'; selectSwapTarget()">Yeşil</button>
+                <button class="modal-btn" style="background:var(--c-yellow-pure);" onclick="pendingColor='yellow'; selectSwapTarget()">Sarı</button>
+            </div>
+
+            <div id="swap-targets" class="hidden">
+                <h4 style="margin-bottom: 5px;">2. Oyuncu Seç</h4>
+                <div class="modal-grid" id="swap-target-buttons"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SKORBOARD MODALI -->
+    <div id="scoreboard-modal" class="screen hidden" style="z-index: 4500; background: rgba(0,0,0,0.9);">
+        <div class="menu-box">
+            <h2>Tur Bitti!</h2>
+            <div id="score-list" style="margin: 20px 0; font-size:1.2rem; line-height: 2;"></div>
+            <button class="menu-btn" style="background: #10b981;" onclick="continueGame()">Sıradaki Tur (Skorlar Korunur)</button>
+            <button class="menu-btn" style="background: #ef4444;" onclick="endGameFinal()">Oyunu Bitir</button>
+        </div>
+    </div>
+    
+    <!-- FİNAL EKRANI -->
+    <div id="final-modal" class="screen hidden" style="z-index: 5000; background: rgba(0,0,0,0.95);">
+        <div class="menu-box">
+            <h1 style="color:#f59e0b; margin-bottom: 10px;">👑 ŞAMPİYON 👑</h1>
+            <h2 id="final-winner" style="margin-bottom: 20px; font-size: 2.5rem;"></h2>
+            <div id="final-scores" style="margin-bottom: 20px; font-size:1.1rem; line-height: 1.8;"></div>
+            <button class="menu-btn" style="background: #3b82f6;" onclick="openScreen('main-menu')">Yeni Oyun (Ana Menü)</button>
+        </div>
+    </div>
+
+    <!-- DURAKLATMA EKRANI (Menü Butonu İçin) -->
+    <div id="pause-overlay" class="screen hidden" style="z-index: 4000;">
+        <div class="menu-box">
+            <h2>Oyun Duraklatıldı</h2>
+            <button class="menu-btn" onclick="resumeGame()" style="background: #10b981;">Devam Et</button>
+            <button class="menu-btn" onclick="endGameFinal()" style="background: #ef4444;">Oyunu Bitir</button>
+        </div>
+    </div>
+
+    <!-- INTRO OVERLAY -->
+    <div id="intro-overlay" class="hidden">
+        <div class="intro-text">Pico</div>
+    </div>
+
+    <!-- OYUN ALANI -->
+    <div id="game-arena" class="hidden">
+        <div id="top-bar-left">
+            <button class="top-btn" onclick="pauseGame()">
+                <svg viewBox="0 0 24 24" style="width:20px; height:20px; fill:white;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> Menü
+            </button>
+        </div>
+        
+        <div id="player-1" class="player-area">
+            <div class="player-info" id="info-1">
+                <div class="player-name" id="name-1">Bot 1</div>
+                <div class="timer-bar-container" id="timer-box-1"><div class="timer-bar" id="timer-bar-1"></div></div>
+            </div>
+            <div class="bot-cards-wrapper bot-hand-vertical" id="cards-1"></div>
+        </div>
+        
+        <div id="player-2" class="player-area">
+            <div class="player-info" id="info-2">
+                <div class="player-name" id="name-2">Bot 2</div>
+                <div class="timer-bar-container" id="timer-box-2"><div class="timer-bar" id="timer-bar-2"></div></div>
+            </div>
+            <div class="bot-cards-wrapper bot-hand-horizontal" id="cards-2"></div>
+        </div>
+        
+        <div id="player-3" class="player-area">
+            <div class="player-info" id="info-3">
+                <div class="player-name" id="name-3">Bot 3</div>
+                <div class="timer-bar-container" id="timer-box-3"><div class="timer-bar" id="timer-bar-3"></div></div>
+            </div>
+            <div class="bot-cards-wrapper bot-hand-vertical" id="cards-3"></div>
+        </div>
+
+        <!-- Orta Deste ve Atılan Kart -->
+        <div id="center-pile">
+            <div class="card stack-3d" id="deck" onclick="userDrawCard()">
+                <div class="card-ellipse"><span class="card-value" style="font-size:clamp(0.9rem, 2.5vw, 1.3rem);">Pico</span></div>
+            </div>
+            <div id="discard-pile" class="stack-3d"></div>
+        </div>
+
+        <!-- Bizim Alan -->
+        <div id="player-0" class="player-area">
+            <div class="player-info" id="info-0" style="margin-bottom: 5px;">
+                <div class="player-name" id="name-0">Mustafa</div>
+                <div class="timer-bar-container" id="timer-box-0" style="width: 150px;"><div class="timer-bar" id="timer-bar-0"></div></div>
+            </div>
+            <div id="my-cards"></div>
+            <div id="controls-row">
+                <button class="game-btn" id="btn-play" onclick="playSelectedCard()">Kartı At</button>
+                <button class="game-btn" id="btn-draw" onclick="userDrawCard()">Kart Çek</button>
+                <button class="game-btn hidden" id="btn-pass" onclick="passTurn()">Pas Geç</button>
+                <button class="game-btn" id="btn-pico" onclick="clickPico()">Pico!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- SİSTEM DEĞİŞKENLERİ ---
+        const colors = ['red', 'blue', 'green', 'yellow'];
+        let deck = [], discardPile = [], hands = [[], [], [], []], scores = [0, 0, 0, 0];
+        let currentPlayer = 0, direction = 1, currentColor = 'blue';
+        let picoClicked = [false, false, false, false], hasDrawnThisTurn = false;
+        let gameActive = false, selectedCardIndex = -1;
+        let soundEnabled = true, timeLeft = 15, timerInterval = null;
+        let maxPlayers = 4, myName = "Mustafa", difficulty = "normal";
+        let rules = { swapCount: 2, plus4Count: 4 };
+        let pendingColor = '', pendingSwapTarget = -1, isOnline = false;
+        let roundStarter = -1; // İlk el random, sonrakiler sağa kayar
+
+        // --- SES MOTORU ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (!soundEnabled || audioCtx.state === 'suspended') return;
+            const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            if (type === 'deal') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'play') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-on-icon').classList.toggle('hidden', !soundEnabled);
+            document.getElementById('sound-off-icon').classList.toggle('hidden', soundEnabled);
+            if (soundEnabled && audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        // --- ARKA PLAN KART ANİMASYONU ---
+        function createFallingCards() {
+            const container = document.getElementById('bg-anim');
+            for(let i=0; i<15; i++) {
+                let card = document.createElement('div');
+                card.className = 'falling-card';
+                card.style.left = Math.random() * 100 + 'vw';
+                card.style.animationDuration = (6 + Math.random() * 5) + 's';
+                card.style.animationDelay = (Math.random() * 5) + 's';
+                container.appendChild(card);
+            }
+        }
+        window.onload = createFallingCards;
+
+        // --- ARAYÜZ YÖNETİMİ ---
+        function openScreen(id) { document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
+        function changeTheme() { document.body.setAttribute('data-bg', document.getElementById('setting-bg').value); document.body.setAttribute('data-card', document.getElementById('setting-card').value); }
+        function saveSettings() {
+            myName = document.getElementById('setting-name').value || "Mustafa";
+            rules.swapCount = parseInt(document.getElementById('rule-swap-count').value);
+            rules.plus4Count = parseInt(document.getElementById('rule-plus4-count').value);
+            openScreen('main-menu'); showToast("Ayarlar kaydedildi!", "success");
+            document.getElementById('lobby-my-name').innerText = myName;
+        }
+        function showToast(msg, type="normal") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`; toast.innerText = msg;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
+        }
+
+        // --- OYUN KURMA ---
+        function openSinglePlayerSetup() {
+            isOnline = false; maxPlayers = 4;
+            openScreen('single-setup');
+        }
+        function startSingleGame() {
+            difficulty = document.getElementById('single-diff').value;
+            scores = [0, 0, 0, 0]; roundStarter = -1;
+            launchGameSequence();
+        }
+        
+        function hostGame() {
+            isOnline = true;
+            document.getElementById('random-code').innerText = "Kod: " + Math.floor(10000 + Math.random() * 90000);
+            document.getElementById('host-controls').classList.remove('hidden');
+            document.getElementById('btn-start-online').classList.remove('hidden');
+            document.getElementById('lobby-wait-text').classList.add('hidden');
+            document.getElementById('joiner-status').innerText = "Bekleniyor...";
+            openScreen('host-lobby');
+            
+            // Simüle edilmiş katılım (Host için)
+            setTimeout(() => { document.getElementById('joiner-status').innerText = "2. Oyuncu Katıldı"; document.getElementById('joiner-status').style.color = "#10b981"; }, 3000);
+        }
+        
+        function joinSimulatedGame() {
+            let code = document.getElementById('room-code-input').value;
+            if(code.length !== 5) return showToast("5 haneli geçerli bir kod girin!", "error");
+            isOnline = true;
+            showToast("Odaya bağlanılıyor...", "success");
+            setTimeout(() => {
+                document.getElementById('random-code').innerText = "Oda: " + code;
+                document.getElementById('host-controls').classList.add('hidden');
+                document.getElementById('btn-start-online').classList.add('hidden');
+                document.getElementById('lobby-wait-text').classList.remove('hidden');
+                
+                document.getElementById('joiner-status').innerText = "Kurucu bekleniyor...";
+                openScreen('host-lobby');
+            }, 1000);
+        }
+        
+        function initGameSession() {
+            if(isOnline) {
+                maxPlayers = parseInt(document.getElementById('player-count').value);
+                difficulty = document.getElementById('host-bot-diff').value;
+            }
+            scores = [0, 0, 0, 0]; roundStarter = -1;
+            launchGameSequence();
+        }
+
+        function launchGameSequence() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
+            document.getElementById('bg-anim').classList.add('hidden'); // Oyun içi animasyonu kapat
+            document.getElementById('game-arena').classList.remove('hidden');
+            document.getElementById('intro-overlay').classList.remove('hidden');
+            
+            document.getElementById('name-0').innerText = myName;
+            for(let i=1; i<4; i++) document.getElementById(`name-${i}`).innerText = isOnline ? `Oyuncu ${i+1}` : `Bot ${i}`;
+            
+            setTimeout(() => {
+                document.getElementById('intro-overlay').classList.add('hidden');
+                gameActive = true; initRound();
+            }, 2500);
+        }
+
+        function buildDeck() {
+            deck = [];
+            colors.forEach(c => {
+                for (let i = 0; i <= 9; i++) { deck.push({ color: c, val: i.toString() }); deck.push({ color: c, val: i.toString() }); }
+                deck.push({ color: c, val: '⇄' }); deck.push({ color: c, val: '⇄' }); // Yön (Standart)
+                deck.push({ color: c, val: '+2' }); deck.push({ color: c, val: '+2' }); // +2 (Standart)
+            });
+            for(let i=0; i<rules.swapCount; i++) deck.push({ color: 'wild', val: 'Değiş' });
+            for(let i=0; i<rules.plus4Count; i++) deck.push({ color: 'wild', val: '+4' });
+            deck.sort(() => Math.random() - 0.5);
+        }
+
+        function initRound() {
+            buildDeck();
+            hands = [[], [], [], []];
+            
+            // Masayı temizle
+            document.getElementById('my-cards').innerHTML = '';
+            for (let i = 1; i <= 3; i++) document.getElementById(`cards-${i}`).innerHTML = '';
+            document.getElementById('discard-pile').innerHTML = '';
+            document.getElementById('discard-pile').style.boxShadow = "none";
+            
+            for(let i=1; i<=3; i++) document.getElementById(`player-${i}`).style.display = (i < maxPlayers) ? 'flex' : 'none';
+
+            // 3 Saniye Hızlı Dağıtım Animasyonu Simülasyonu (Zamanla doldur)
+            for (let i = 0; i < 7; i++) { for (let p = 0; p < maxPlayers; p++) hands[p].push(deck.pop()); }
+            
+            setTimeout(() => {
+                let firstCard = deck.pop();
+                while(['Değiş', '+2', '+4', '⇄'].includes(firstCard.val) || firstCard.color === 'wild') { deck.unshift(firstCard); firstCard = deck.pop(); }
+                discardPile = [firstCard]; currentColor = firstCard.color;
+                
+                selectedCardIndex = -1; picoClicked = [false, false, false, false]; direction = 1;
+                hasDrawnThisTurn = false; document.getElementById('btn-pass').classList.add('hidden'); document.getElementById('btn-draw').classList.remove('hidden');
+                
+                // Başlayan kişiyi seç
+                if(roundStarter === -1) roundStarter = Math.floor(Math.random() * maxPlayers);
+                else roundStarter = (roundStarter + 1) % maxPlayers;
+                
+                currentPlayer = roundStarter;
+                updateUI();
+                showToast(`${document.getElementById('name-'+currentPlayer).innerText} başlıyor!`, "success");
+                setTimeout(startTurn, 1000);
+            }, 1000); // 1 sn bekleyip elleri aç
+        }
+
+        // --- ANİMASYON ---
+        function animateCard(startEl, targetEl, htmlContent, callback) {
+            if(!startEl || !targetEl) { callback(); return; }
+            let rect1 = startEl.getBoundingClientRect(), rect2 = targetEl.getBoundingClientRect();
+            let clone = document.createElement('div');
+            clone.innerHTML = htmlContent; clone.className = 'anim-card';
+            clone.style.left = rect1.left + 'px'; clone.style.top = rect1.top + 'px';
+            document.body.appendChild(clone);
+            
+            setTimeout(() => { clone.style.left = rect2.left + 'px'; clone.style.top = rect2.top + 'px'; }, 20);
+            setTimeout(() => { clone.remove(); callback(); }, 400); // Daha pürüzsüz hız
+        }
+
+        // --- OYUN SIRASI & SÜRE ---
+        function startTurn() {
+            if (!gameActive) return;
+            hasDrawnThisTurn = false;
+            if(currentPlayer === 0) {
+                document.getElementById('btn-draw').classList.remove('hidden');
+                document.getElementById('btn-pass').classList.add('hidden');
+            }
+
+            for (let i = 0; i < 4; i++) {
+                let infoEl = document.getElementById(`info-${i}`);
+                if(infoEl) infoEl.classList.toggle('active-turn', i === currentPlayer);
+                let box = document.getElementById(`timer-box-${i}`);
+                if(box) box.style.display = 'none';
+            }
+
+            let activeBox = document.getElementById(`timer-box-${currentPlayer}`);
+            let activeBar = document.getElementById(`timer-bar-${currentPlayer}`);
+            if(activeBox && activeBar) {
+                activeBox.style.display = 'block'; activeBar.style.width = '100%'; activeBar.style.backgroundColor = '#10b981';
+                timeLeft = 15; clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    timeLeft--; activeBar.style.width = ((timeLeft / 15) * 100) + '%';
+                    if (timeLeft <= 5) activeBar.style.backgroundColor = '#ef4444';
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        if (currentPlayer === 0) {
+                            if (!hasDrawnThisTurn) {
+                                showToast("Süre doldu, kart çekiliyor!", "error");
+                                userDrawCard(true); // Otomatik çeker ve 5 sn verir
+                            } else {
+                                showToast("Süre doldu, pas geçiliyor.", "error");
+                                passTurn();
+                            }
+                        } else {
+                            systemDraw(currentPlayer, 1, true, () => { nextTurn(); });
+                        }
+                    }
+                }, 1000);
+            }
+
+            if (currentPlayer !== 0) {
+                let thinkTime = Math.random() < 0.3 ? (3000 + Math.random()*2000) : (1000 + Math.random()*1500);
+                setTimeout(botPlay, thinkTime);
+            }
+        }
+
+        // --- KART OYNAMA ---
+        function selectCard(idx) { if (currentPlayer !== 0) return; selectedCardIndex = (selectedCardIndex === idx) ? -1 : idx; updateUI(); }
+
+        function playSelectedCard() {
+            if (currentPlayer !== 0 || selectedCardIndex === -1) return;
+            let card = hands[0][selectedCardIndex];
+            if (isValidPlay(card)) {
+                if (hands[0].length === 2 && !picoClicked[0]) {
+                    playSound('error'); showToast("Pico demeyi unuttun! Ceza kartı çektin.", "error");
+                    systemDraw(0, 1, true); selectedCardIndex = -1; nextTurn(); return;
+                }
+                
+                if (card.color === 'wild') {
+                    // El Değiştir veya +4 Modalı
+                    document.getElementById('swap-modal').classList.remove('hidden');
+                    if(card.val === 'Değiş') document.getElementById('swap-targets').classList.add('hidden');
+                    else document.getElementById('swap-targets').classList.add('hidden'); // +4 için sadece renk
+                    return; 
+                }
+                executePlay(0, selectedCardIndex);
+            } else { playSound('error'); showToast("Bu kartı atamazsın!", "error"); }
+        }
+
+        function isValidPlay(card) {
+            let topCard = discardPile[discardPile.length - 1];
+            return card.color === 'wild' || card.color === currentColor || card.val === topCard.val;
+        }
+
+        function executePlay(pIndex, cardIndex, forceWildColor = null, swapTarget = -1) {
+            clearInterval(timerInterval);
+            let card = hands[pIndex].splice(cardIndex, 1)[0];
+            selectedCardIndex = -1;
+            
+            let startEl = pIndex === 0 ? document.getElementById('my-cards').children[cardIndex] : document.getElementById(`cards-${pIndex}`);
+            let targetEl = document.getElementById('discard-pile');
+            
+            playSound('play');
+            animateCard(startEl, targetEl, getCardHTML(card), () => {
+                discardPile.push(card);
+                picoClicked[pIndex] = false;
+                let skipTurn = false;
+                
+                if(card.color !== 'wild') {
+                    currentColor = card.color;
+                    document.getElementById('discard-pile').style.boxShadow = "none";
+                } else {
+                    currentColor = forceWildColor ? forceWildColor : colors[Math.floor(Math.random() * colors.length)];
+                    // Renk yazısı ve glow efekti
+                    let colorName = currentColor==='red'?'KIRMIZI':currentColor==='blue'?'MAVİ':currentColor==='green'?'YEŞİL':'SARI';
+                    let glowColor = `var(--c-${currentColor}-pure)`;
+                    document.getElementById('discard-pile').style.boxShadow = `0 0 30px ${glowColor}, inset 0 0 20px ${glowColor}`;
+                    card.displayWildText = colorName; // Rengi karta yazmak için
+                }
+
+                if (card.val === '+2') { 
+                    let nextP = (currentPlayer + direction + maxPlayers) % maxPlayers;
+                    systemDraw(nextP, 2, true); skipTurn = true; showToast("+2 Kart Çektirildi!");
+                }
+                else if (card.val === '+4') {
+                    let nextP = (currentPlayer + direction + maxPlayers) % maxPlayers;
+                    systemDraw(nextP, 4, true); skipTurn = true; showToast("+4 Kart Çektirildi!");
+                }
+                else if (card.val === 'Değiş' && swapTarget !== -1 && swapTarget !== pIndex) {
+                    let temp = hands[pIndex]; hands[pIndex] = hands[swapTarget]; hands[swapTarget] = temp;
+                    showToast(`Eller Değiştirildi! Renk: ${currentColor}`, "success");
+                    picoClicked[pIndex] = false; picoClicked[swapTarget] = false;
+                }
+                else if (card.val === '⇄') { direction *= -1; showToast("Yön Değişti!"); }
+
+                if (hands[pIndex].length === 0 && card.val !== 'Değiş') { roundEnd(pIndex); return; } // Değiş atarsa eli dolabilir
+                
+                updateUI();
+                if(skipTurn) { currentPlayer = (currentPlayer + direction + maxPlayers) % maxPlayers; }
+                nextTurn();
+            });
+        }
+
+        // --- SWAP / WILD MODAL LOGIC (PLAYER) ---
+        function selectSwapTarget() {
+            let card = hands[0][selectedCardIndex];
+            if(card.val === '+4') {
+                document.getElementById('swap-modal').classList.add('hidden');
+                executePlay(0, selectedCardIndex, pendingColor, -1);
+            } else {
+                document.getElementById('swap-targets').classList.remove('hidden');
+                let html = '';
+                for(let i=1; i<maxPlayers; i++) {
+                    html += `<button class="modal-btn" style="background:#334155;" onclick="confirmSwap(${i})">${document.getElementById(`name-${i}`).innerText}</button>`;
+                }
+                document.getElementById('swap-target-buttons').innerHTML = html;
+            }
+        }
+        function confirmSwap(target) {
+            document.getElementById('swap-modal').classList.add('hidden');
+            executePlay(0, selectedCardIndex, pendingColor, target);
+        }
+
+        // --- ÇEKME VE PAS MANTIĞI ---
+        function userDrawCard(auto = false) {
+            if(currentPlayer !== 0 || hasDrawnThisTurn) return;
+            hasDrawnThisTurn = true;
+            document.getElementById('btn-draw').classList.add('hidden');
+            document.getElementById('btn-pass').classList.remove('hidden');
+            
+            systemDraw(0, 1, true, () => {
+                clearInterval(timerInterval);
+                timeLeft = 5;
+                let activeBar = document.getElementById(`timer-bar-0`);
+                if(activeBar) {
+                    activeBar.style.width = '100%'; activeBar.style.backgroundColor = '#f59e0b';
+                    timerInterval = setInterval(() => {
+                        timeLeft--; activeBar.style.width = ((timeLeft / 5) * 100) + '%';
+                        if (timeLeft <= 0) { clearInterval(timerInterval); passTurn(); }
+                    }, 1000);
+                }
+            });
+        }
+
+        function passTurn() {
+            if(currentPlayer !== 0) return;
+            clearInterval(timerInterval); nextTurn();
+        }
+
+        function systemDraw(pIndex, amount = 1, forceAnim = true, cb = null) {
+            let drawn = 0;
+            function drawOne() {
+                if(drawn >= amount) { if(cb) cb(); updateUI(); return; }
+                if(deck.length === 0) { let top=discardPile.pop(); deck=discardPile; discardPile=[top]; deck.sort(()=>Math.random()-0.5); }
+                let newCard = deck.pop();
+                
+                if(pIndex === 0 && difficulty === 'easy' && !isValidPlay(newCard) && Math.random() < 0.6) {
+                    let goodIdx = deck.findIndex(c => isValidPlay(c));
+                    if(goodIdx > -1) { deck.push(newCard); newCard = deck.splice(goodIdx, 1)[0]; }
+                }
+
+                hands[pIndex].push(newCard); playSound('deal');
+                
+                if(forceAnim) {
+                    let targetEl = pIndex === 0 ? document.getElementById('my-cards') : document.getElementById(`cards-${pIndex}`);
+                    animateCard(document.getElementById('deck'), targetEl, '<div class="card-back"></div>', () => { drawn++; drawOne(); });
+                } else { drawn++; drawOne(); }
+            }
+            drawOne();
+        }
+
+        // --- BOT ZEKASI ---
+        function botPlay() {
+            if (!gameActive || currentPlayer === 0) return;
+            let botHand = hands[currentPlayer];
+            
+            let forgetChance = difficulty === 'easy' ? 0.3 : (difficulty === 'normal' ? 0.15 : 0.0);
+            if (botHand.length === 2 && Math.random() > forgetChance) picoClicked[currentPlayer] = true;
+
+            let cardIdx = botHand.findIndex(c => isValidPlay(c));
+            if(difficulty === 'hard') {
+                let attackIdx = botHand.findIndex(c => (c.val === '+2' || c.val === '+4' || c.val === 'Değiş') && isValidPlay(c));
+                if(attackIdx > -1) cardIdx = attackIdx;
+            }
+
+            if (cardIdx > -1) {
+                if (botHand.length === 1 && !picoClicked[currentPlayer]) { systemDraw(currentPlayer, 1, true); }
+                
+                let card = botHand[cardIdx];
+                let chosenColor = null, chosenTarget = -1;
+                
+                if(card.color === 'wild') chosenColor = colors[Math.floor(Math.random() * colors.length)];
+                if(card.val === 'Değiş') {
+                    let minCards = 99;
+                    for(let i=0; i<maxPlayers; i++) {
+                        if(i !== currentPlayer && hands[i].length < minCards) { minCards = hands[i].length; chosenTarget = i; }
+                    }
+                }
+                executePlay(currentPlayer, cardIdx, chosenColor, chosenTarget);
+            } else {
+                systemDraw(currentPlayer, 1, true, () => { nextTurn(); });
+            }
+        }
+
+        function clickPico() {
+            if (currentPlayer === 0 && hands[0].length <= 2) {
+                picoClicked[0] = true; playSound('play'); showToast("Pico deklare edildi!", "success");
+            } else if(currentPlayer === 0) { playSound('error'); showToast("Şu an Pico diyemezsin!"); }
+        }
+
+        function nextTurn() { currentPlayer = (currentPlayer + direction + maxPlayers) % maxPlayers; updateUI(); startTurn(); }
+
+        // --- SKORLAMA VE OYUN SONU ---
+        function roundEnd(winnerIndex) {
+            clearInterval(timerInterval); gameActive = false;
+            let roundScore = 0;
+            for(let i=0; i<maxPlayers; i++) {
+                if(i !== winnerIndex) {
+                    hands[i].forEach(c => {
+                        if(c.val === '+2' || c.val === '⇄') roundScore += 20;
+                        else if(c.color === 'wild') roundScore += 50;
+                        else roundScore += parseInt(c.val) || 0;
+                    });
+                }
+            }
+            scores[winnerIndex] += roundScore;
+            
+            let html = '';
+            for(let i=0; i<maxPlayers; i++) {
+                let name = document.getElementById(`name-${i}`).innerText;
+                let isWin = i === winnerIndex ? " <span style='color:#f59e0b;'>🏆</span>" : "";
+                html += `<div>${name}: ${scores[i]} Puan${isWin}</div>`;
+            }
+            document.getElementById('score-list').innerHTML = html;
+            document.getElementById('scoreboard-modal').classList.remove('hidden');
+        }
+
+        function continueGame() { document.getElementById('scoreboard-modal').classList.add('hidden'); initRound(); }
+        
+        function endGameFinal() {
+            document.getElementById('scoreboard-modal').classList.add('hidden');
+            document.getElementById('pause-overlay').classList.add('hidden');
+            
+            let maxScore = -1, winnerName = "";
+            let html = '';
+            for(let i=0; i<maxPlayers; i++) {
+                if(scores[i] > maxScore) { maxScore = scores[i]; winnerName = document.getElementById(`name-${i}`).innerText; }
+                html += `<div>${document.getElementById(`name-${i}`).innerText}: ${scores[i]}</div>`;
+            }
+            document.getElementById('final-winner').innerText = winnerName;
+            document.getElementById('final-scores').innerHTML = html;
+            
+            document.getElementById('game-arena').classList.add('hidden');
+            document.getElementById('final-modal').classList.remove('hidden');
+        }
+
+        // --- RENDER ---
+        function getCardHTML(c, isHand = false, idx = -1) {
+            let selClass = (isHand && idx === selectedCardIndex) ? 'selected' : '';
+            let click = isHand ? `onclick="selectCard(${idx})"` : '';
+            let val = c.val; let bgClass = c.color === 'wild' ? 'wild' : c.color;
+            
+            // Eğer ortaya atılmış ve rengi seçilmiş bir wild kartsa (Yazı parlaması)
+            let centerText = val;
+            if(!isHand && c.displayWildText) {
+                centerText = `<span style="font-size:clamp(0.8rem, 2vw, 1rem); color:white;">${c.displayWildText}</span><br>${val}`;
+            }
+
+            return `
+                <div class="card ${bgClass} ${selClass}" ${click}>
+                    <span class="corner-tl">${val}</span>
+                    <div class="card-ellipse"><span class="card-value">${centerText}</span></div>
+                    <span class="corner-br">${val}</span>
+                </div>
+            `;
+        }
+
+        function updateUI() {
+            document.getElementById('my-cards').innerHTML = hands[0].map((c, i) => getCardHTML(c, true, i)).join('');
+            for (let i = 1; i <= 3; i++) {
+                if (i < maxPlayers) {
+                    let html = hands[i].map(() => `<div class="card-back"></div>`).join('');
+                    document.getElementById(`cards-${i}`).innerHTML = html;
+                }
+            }
+            let topCard = discardPile[discardPile.length - 1];
+            if(topCard) document.getElementById('discard-pile').innerHTML = getCardHTML(topCard, false);
+        }
+
+        // --- MENÜ (DURDUR BUTONU DÜZELTMESİ) ---
+        function pauseGame() { 
+            gameActive = false; clearInterval(timerInterval); 
+            document.getElementById('pause-overlay').classList.remove('hidden'); 
+        }
+        function resumeGame() { 
+            document.getElementById('pause-overlay').classList.add('hidden'); 
+            gameActive = true; startTurn(); 
+        }
+    </script>
+</body>
+</html>
