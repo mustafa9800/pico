@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pico</title>
+    <!-- PeerJS (Gerçek Online Bağlantı İçin) -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         /* === TEMALAR VE RENKLER === */
         :root {
@@ -14,7 +16,6 @@
             --c-green: linear-gradient(135deg, #10b981, #047857); --c-yellow: linear-gradient(135deg, #f59e0b, #b45309);
         }
         
-        /* Arka Plan Temaları (Saf CSS - Hatasız Çalışır) */
         body[data-bg="dark-1"] { --bg-deep: #050505; --table-grad: radial-gradient(circle at 50% 50%, #172a45 0%, #050505 80%); --text: #e2e8f0; }
         body[data-bg="dark-2"] { --bg-deep: #050000; --table-grad: radial-gradient(circle at 50% 50%, #451717 0%, #050000 80%); --text: #e2e8f0; }
         body[data-bg="dark-3"] { --bg-deep: #000500; --table-grad: radial-gradient(circle at 50% 50%, #174522 0%, #000500 80%); --text: #e2e8f0; }
@@ -26,7 +27,6 @@
         body[data-bg="light-4"] { --bg-deep: #f8f8ff; --table-grad: radial-gradient(circle at 50% 50%, #e6e6fa 0%, #f8f8ff 80%); --text: #1e293b; --menu-bg: rgba(255,255,255,0.9); }
         body[data-bg="light-5"] { --bg-deep: #ffffff; --table-grad: radial-gradient(circle at 50% 50%, #cccccc 0%, #ffffff 80%); --text: #1e293b; --menu-bg: rgba(255,255,255,0.9); }
 
-        /* Kart Temaları */
         body[data-card="1"] {} 
         body[data-card="2"] { --c-red-pure: #ff0000; --c-blue-pure: #0000ff; --c-green-pure: #00aa00; --c-yellow-pure: #ffcc00; --c-red: #ff0000; --c-blue: #0000ff; --c-green: #00aa00; --c-yellow: #ffcc00; } 
         body[data-card="3"] { --c-red-pure: #8b0000; --c-blue-pure: #00008b; --c-green-pure: #006400; --c-yellow-pure: #b8860b; --c-red: #8b0000; --c-blue: #00008b; --c-green: #006400; --c-yellow: #b8860b; } 
@@ -35,40 +35,20 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: manipulation; }
         
-        /* BEYAZ EKRAN HATASI KESİN ÇÖZÜMÜ */
-        body { 
-            background: var(--table-grad); 
-            background-attachment: fixed;
-            color: var(--text); 
-            position: fixed; width: 100%; height: 100%; 
-            overflow: hidden; user-select: none; 
-        }
+        body { background: var(--table-grad); background-attachment: fixed; color: var(--text); position: fixed; width: 100%; height: 100%; overflow: hidden; user-select: none; }
 
-        /* === PERFORMANSLI KONFETİ (KART PARÇALARI) ANİMASYONU === */
+        /* === PERFORMANSLI KONFETİ === */
         #bg-anim { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; overflow: hidden; }
-        .falling-card { 
-            position: absolute; 
-            width: 15px; height: 25px; /* Küçük konfetiler */
-            border-radius: 3px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            animation: fall linear infinite; 
-            /* Performans artırıcı - Sıfır kasma */
-            will-change: transform; 
-            backface-visibility: hidden;
-        }
-        @keyframes fall {
-            0% { transform: translateY(-10vh) rotateX(0deg) rotateY(0deg) rotateZ(0deg); opacity: 0.9; }
-            100% { transform: translateY(110vh) rotateX(360deg) rotateY(720deg) rotateZ(180deg); opacity: 0; }
-        }
+        .falling-card { position: absolute; width: 15px; height: 25px; border-radius: 3px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); animation: fall linear infinite; will-change: transform; backface-visibility: hidden; }
+        @keyframes fall { 0% { transform: translateY(-10vh) rotateX(0deg) rotateY(0deg) rotateZ(0deg); opacity: 0.9; } 100% { transform: translateY(110vh) rotateX(360deg) rotateY(720deg) rotateZ(180deg); opacity: 0; } }
 
-        /* === GENEL MENÜ ARAYÜZÜ === */
-        /* Arkaplan transparent, sadece menü kutusu görünür. (Beyazlık yapmaz) */
+        /* === MENÜ ARAYÜZÜ === */
         .screen { position: absolute; width: 100%; height: 100%; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .hidden { display: none !important; }
-        
         .pico-title { font-size: clamp(4rem, 12vw, 7rem); margin-bottom: 20px; letter-spacing: 5px; font-style: italic; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5), 0 0 20px #ef4444, 0 0 40px #ef4444; }
         .menu-btn { padding: 12px 25px; margin: 8px; background: rgba(0,0,0,0.4); border: 2px solid var(--text); color: var(--text); cursor: pointer; border-radius: 8px; font-size: 1.1rem; font-weight: bold; transition: 0.3s; width: 280px; max-width: 85vw; z-index: 20; }
         .menu-btn:hover { background: var(--text); color: var(--bg-deep); transform: scale(1.05); }
+        .menu-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .menu-box { background: var(--menu-bg); padding: 25px; border-radius: 15px; border: 1px solid rgba(150,150,150,0.3); text-align: center; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 90%; max-width: 450px; z-index: 20; }
         .input-group { margin-bottom: 15px; text-align: left; }
         .input-group label { display: block; font-size: 0.9rem; margin-bottom: 5px; font-weight: bold; }
@@ -95,7 +75,7 @@
         
         .player-area { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 10; transition: 0.3s; }
         .player-info { display: flex; flex-direction: column; align-items: center; padding: 5px; border-radius: 10px; transition: 0.3s; }
-        .player-name { background: rgba(0,0,0,0.7); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); }
+        .player-name { background: rgba(0,0,0,0.7); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); text-align:center; min-width: 80px;}
         .active-turn { box-shadow: 0 0 20px #60a5fa; background: rgba(96, 165, 250, 0.2); transform: scale(1.1); border-color: #60a5fa; }
         .active-turn .player-name { color: #60a5fa; border-color: #60a5fa; }
         
@@ -156,8 +136,7 @@
         /* INTRO / PROFESYONEL LOADING EKRANI */
         #intro-overlay { 
             position: absolute; width: 100%; height: 100%; 
-            background: var(--table-grad); /* Arka plandaki temanın ta kendisi! */
-            z-index: 5000; display: flex; justify-content: center; align-items: center; 
+            background: var(--table-grad); z-index: 5000; display: flex; justify-content: center; align-items: center; 
             transition: opacity 0.5s ease; pointer-events: none; 
         }
         .intro-text { 
@@ -165,16 +144,10 @@
             letter-spacing: 10px; font-style: italic; text-shadow: 0 0 50px #ef4444; 
             animation: introAnim 2s forwards; 
         }
-        @keyframes introAnim { 
-            0% { transform: scale(3); opacity: 0; } 
-            20% { transform: scale(1); opacity: 1; } 
-            80% { transform: scale(1); opacity: 1; } 
-            100% { transform: scale(0.8); opacity: 0; } 
-        }
+        @keyframes introAnim { 0% { transform: scale(3); opacity: 0; } 20% { transform: scale(1); opacity: 1; } 80% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.8); opacity: 0; } }
         
-        .anim-card { position: absolute; z-index: 1000; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); pointer-events: none; }
+        .anim-card { position: absolute; z-index: 1000; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); pointer-events: none; }
         
-        /* Modal ve Modüller */
         .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
         .modal-btn { padding: 15px; font-size: 1.1rem; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; text-shadow: 1px 1px 2px black; }
 
@@ -188,7 +161,6 @@
 </head>
 <body data-bg="dark-1" data-card="1">
 
-    <!-- KONFETİ YAĞMURU (Performanslı) -->
     <div id="bg-anim"></div>
 
     <div id="sound-btn-global" onclick="toggleSound()">
@@ -205,7 +177,6 @@
         <button class="menu-btn" onclick="openScreen('online-menu')">Online Oyna</button>
         <button class="menu-btn" onclick="openScreen('settings-screen')">Kurallar ve Ayarlar</button>
         
-        <!-- SÜRÜM YAZISI -->
         <div style="position: absolute; bottom: 10px; right: 10px; color: rgba(255,255,255,0.5); font-size: 0.8rem; font-weight: bold; z-index: 100;">v0.01</div>
     </div>
 
@@ -214,11 +185,11 @@
         <div class="menu-box">
             <h2>Tek Oyuncu</h2>
             <div class="input-group" style="margin-top:20px;">
-                <label>Oyun Zorluğu (Şans & Zeka):</label>
+                <label>Oyun Zorluğu:</label>
                 <select id="single-diff" class="menu-input">
-                    <option value="easy">Kolay (Şans senden yana)</option>
+                    <option value="easy">Kolay</option>
                     <option value="normal" selected>Normal</option>
-                    <option value="hard">Zor (Acımasız botlar)</option>
+                    <option value="hard">Zor</option>
                 </select>
             </div>
             <button class="menu-btn" style="background: #10b981;" onclick="startSingleGame()">Oyunu Başlat</button>
@@ -244,7 +215,7 @@
                 <label>5 Haneli Oda Kodu:</label>
                 <input type="number" id="room-code-input" class="menu-input" placeholder="Örn: 58291">
             </div>
-            <button class="menu-btn" style="background: #10b981;" onclick="joinSimulatedGame()">Katıl</button>
+            <button class="menu-btn" id="btn-join-room" style="background: #10b981;" onclick="joinRealGame()">Bağlan</button>
             <button class="menu-btn" onclick="openScreen('online-menu')" style="background: #ef4444;">Geri</button>
         </div>
     </div>
@@ -253,12 +224,12 @@
     <div id="host-lobby" class="screen hidden">
         <div class="menu-box">
             <h2>Oyun Lobisi</h2>
-            <p style="color:#60a5fa; font-weight:bold; font-size:2rem; margin:15px 0; letter-spacing: 5px;" id="random-code"></p>
+            <p style="color:#60a5fa; font-weight:bold; font-size:2rem; margin:15px 0; letter-spacing: 5px;" id="random-code">Yükleniyor...</p>
             
             <div id="host-controls">
                 <div class="input-group">
                     <label>Toplam Oyuncu (Bot Dahil):</label>
-                    <select id="player-count" class="menu-input">
+                    <select id="player-count" class="menu-input" onchange="updateLobbyUI()">
                         <option value="2">2 Kişi</option>
                         <option value="3">3 Kişi</option>
                         <option value="4" selected>4 Kişi</option>
@@ -278,17 +249,16 @@
                 <h4 style="margin-bottom: 10px;">Katılımcılar</h4>
                 <ul id="lobby-players" style="list-style:none; font-size:0.9rem; line-height:1.5;">
                     <li style="color:#10b981;">1. <span id="lobby-my-name">Mustafa</span> (Host)</li>
-                    <li id="joiner-status" style="color:#aaa;">Bekleniyor...</li>
                 </ul>
             </div>
 
-            <p id="lobby-wait-text" class="hidden" style="color:#f59e0b; font-size:0.85rem; margin-bottom:15px;">Kurucu oyunu başlatması bekleniyor...</p>
-            <button class="menu-btn" id="btn-start-online" style="background: #10b981;" onclick="initGameSession()">Başlat</button>
-            <button class="menu-btn" onclick="openScreen('main-menu')" style="background: #ef4444;">Ayrıl</button>
+            <p id="lobby-wait-text" class="hidden" style="color:#f59e0b; font-size:0.85rem; margin-bottom:15px;">Host'un oyunu başlatması bekleniyor...</p>
+            <button class="menu-btn" id="btn-start-online" style="background: #10b981;" onclick="initGameSession()">Oyunu Başlat</button>
+            <button class="menu-btn" onclick="openScreen('main-menu'); if(peer) peer.destroy();" style="background: #ef4444;">Ayrıl</button>
         </div>
     </div>
 
-    <!-- AYARLAR VE KURALLAR -->
+    <!-- AYARLAR -->
     <div id="settings-screen" class="screen hidden">
         <div class="menu-box">
             <h2 style="margin-bottom: 15px;">Ayarlar</h2>
@@ -326,19 +296,18 @@
 
             <h3 style="margin: 20px 0 10px 0; font-size:1.1rem; border-bottom:1px solid #777;">Özel Kurallar</h3>
             <div class="input-group row" style="align-items: center;">
-                <label style="margin:0; flex:1;">El Değiştirme Kartı Sayısı:</label>
+                <label style="margin:0; flex:1;">El Değiştirme Kartı:</label>
                 <input type="number" id="rule-swap-count" class="menu-input" value="2" min="0" max="4" style="width:60px;">
             </div>
             <div class="input-group row" style="align-items: center;">
                 <label style="margin:0; flex:1;">+4 Kartı Sayısı:</label>
                 <input type="number" id="rule-plus4-count" class="menu-input" value="4" min="0" max="8" style="width:60px;">
             </div>
-            <p style="font-size:0.7rem; color:#aaa;">Not: Yön değiştirme ve +2 kartları standart adette destede sabittir.</p>
-            <button class="menu-btn" onclick="saveSettings()" style="background: #10b981; margin-top:20px;">Kaydet ve Çık</button>
+            <button class="menu-btn" onclick="saveSettings()" style="background: #10b981; margin-top:20px;">Kaydet</button>
         </div>
     </div>
 
-    <!-- EL DEĞİŞTİRME & RENK SEÇİMİ MODALI -->
+    <!-- EL DEĞİŞTİRME MODALI -->
     <div id="swap-modal" class="screen hidden" style="z-index: 4000; background: rgba(0,0,0,0.85);">
         <div class="menu-box">
             <h2>El Değiştir</h2>
@@ -364,8 +333,8 @@
         <div class="menu-box">
             <h2>Tur Bitti!</h2>
             <div id="score-list" style="margin: 20px 0; font-size:1.2rem; line-height: 2;"></div>
-            <button class="menu-btn" style="background: #10b981;" onclick="continueGame()">Sıradaki Tur (Skorlar Korunur)</button>
-            <button class="menu-btn" style="background: #ef4444;" onclick="endGameFinal()">Oyunu Bitir</button>
+            <button class="menu-btn" id="btn-next-round" style="background: #10b981;" onclick="continueGame()">Sıradaki Tur (Sadece Host)</button>
+            <button class="menu-btn" id="btn-end-game" style="background: #ef4444;" onclick="endGameFinal()">Oyunu Bitir (Sadece Host)</button>
         </div>
     </div>
     
@@ -375,16 +344,16 @@
             <h1 id="final-winner-title" style="color:#f59e0b; margin-bottom: 10px;">👑 ŞAMPİYON 👑</h1>
             <h2 id="final-winner" style="margin-bottom: 20px; font-size: 2.5rem;"></h2>
             <div id="final-scores" style="margin-bottom: 20px; font-size:1.1rem; line-height: 1.8;"></div>
-            <button class="menu-btn" style="background: #3b82f6;" onclick="openScreen('main-menu')">Yeni Oyun (Ana Menü)</button>
+            <button class="menu-btn" style="background: #3b82f6;" onclick="window.location.reload()">Ana Menüye Dön</button>
         </div>
     </div>
 
     <!-- DURAKLATMA EKRANI -->
     <div id="pause-overlay" class="screen hidden" style="z-index: 4000; background: rgba(0,0,0,0.85);">
         <div class="menu-box">
-            <h2>Oyun Duraklatıldı</h2>
+            <h2>Oyun Menüsü</h2>
             <button class="menu-btn" onclick="resumeGame()" style="background: #10b981;">Devam Et</button>
-            <button class="menu-btn" onclick="endGameFinal()" style="background: #ef4444;">Oyunu Bitir</button>
+            <button class="menu-btn" onclick="window.location.reload()" style="background: #ef4444;">Oyundan Çık</button>
         </div>
     </div>
 
@@ -425,7 +394,6 @@
             <div class="bot-cards-wrapper bot-hand-vertical" id="cards-3"></div>
         </div>
 
-        <!-- Orta Deste ve Atılan Kart -->
         <div id="center-pile">
             <div class="card stack-3d" id="deck" onclick="userDrawCard()">
                 <div class="card-ellipse"><span class="card-value" style="font-size:clamp(0.9rem, 2.5vw, 1.3rem);">Pico</span></div>
@@ -433,7 +401,6 @@
             <div id="discard-pile" class="stack-3d"></div>
         </div>
 
-        <!-- Bizim Alan -->
         <div id="player-0" class="player-area">
             <div class="player-info" id="info-0" style="margin-bottom: 5px;">
                 <div class="player-name" id="name-0">Mustafa</div>
@@ -459,29 +426,68 @@
         let soundEnabled = true, timeLeft = 15, timerInterval = null;
         let maxPlayers = 4, myName = "Mustafa", difficulty = "normal";
         let rules = { swapCount: 2, plus4Count: 4 };
-        let pendingColor = '', pendingSwapTarget = -1, isOnline = false;
+        let pendingColor = '', pendingSwapTarget = -1;
         let roundStarter = -1; 
 
-        // --- SES MOTORU ---
+        // --- NETWORK (ONLİNE) DEĞİŞKENLERİ ---
+        let isOnline = false, isHost = true;
+        let peer = null, myConn = null; // myConn: İstemci için host'a bağlanan obje
+        let hostConns = [null, null, null, null]; // Sadece Host'ta dolu olur
+        let localPlayerId = 0; // Host = 0, İstemci = 1,2,3
+        let playerNames = ["Mustafa", "Bot 1", "Bot 2", "Bot 3"];
+
+        // --- GERÇEKÇİ SES MOTORU ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             if (!soundEnabled || audioCtx.state === 'suspended') return;
-            const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            if (type === 'deal') {
-                osc.type = 'sine'; osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-            } else if (type === 'play') {
-                osc.type = 'triangle'; osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.15);
-                gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.15);
-            } else if (type === 'error') {
-                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            let currentTime = audioCtx.currentTime;
+            
+            if (type === 'card' || type === 'deal') {
+                // Gerçekçi Kart Sesi (Kağıt/Zımba sentezi)
+                let bufferSize = audioCtx.sampleRate * 0.08; 
+                let buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                let data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+                let noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                let filter = audioCtx.createBiquadFilter(), filter2 = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass'; filter.frequency.value = 5000;
+                filter2.type = 'highpass'; filter2.frequency.value = 1000;
+
+                let gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(1.5, currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.08);
+
+                noise.connect(filter); filter.connect(filter2); filter2.connect(gain); gain.connect(audioCtx.destination);
+                noise.start();
+            } 
+            else if (type === 'plus4') {
+                // +4 Kartı Ağır ve Dramatik Sentetik Ses
+                let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, currentTime);
+                osc.frequency.exponentialRampToValueAtTime(50, currentTime + 0.5);
+                gain.gain.setValueAtTime(0.5, currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.5);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(currentTime + 0.5);
+            } 
+            else if (type === 'pico') {
+                // Pico Bildirim Sesi (Zil gibi)
+                let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+                osc.type = 'sine'; osc.frequency.value = 880;
+                gain.gain.setValueAtTime(0.5, currentTime); gain.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.3);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(currentTime + 0.3);
+            }
+            else if (type === 'error') {
+                // Hata Sesi
+                let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+                osc.type = 'square'; osc.frequency.setValueAtTime(150, currentTime);
+                gain.gain.setValueAtTime(0.2, currentTime); gain.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.3);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(currentTime + 0.3);
             }
         }
         function toggleSound() {
@@ -491,35 +497,31 @@
             if (soundEnabled && audioCtx.state === 'suspended') audioCtx.resume();
         }
 
-        // --- ARKA PLAN KONFETİ (SIFIR KASMA) ---
+        // --- ARKA PLAN KONFETİ ---
         function createFallingCards() {
             const container = document.getElementById('bg-anim');
-            const bgColors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b']; // Uno renkleri
+            const bgColors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b']; 
             for(let i=0; i<30; i++) {
                 let card = document.createElement('div');
                 card.className = 'falling-card';
                 card.style.backgroundColor = bgColors[Math.floor(Math.random() * bgColors.length)];
                 card.style.left = Math.random() * 100 + 'vw';
                 card.style.animationDuration = (3 + Math.random() * 4) + 's';
-                card.style.animationDelay = '-' + (Math.random() * 5) + 's'; // Anında ekranda başlasınlar
+                card.style.animationDelay = '-' + (Math.random() * 5) + 's'; 
                 container.appendChild(card);
             }
         }
         window.onload = createFallingCards;
 
-        // --- ARAYÜZ YÖNETİMİ ---
         function openScreen(id) { document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
-        function changeTheme() { 
-            // Direkt HTML niteliklerini değiştiriyoruz. (Saf CSS devrede!)
-            document.body.setAttribute('data-bg', document.getElementById('setting-bg').value); 
-            document.body.setAttribute('data-card', document.getElementById('setting-card').value); 
-        }
+        function changeTheme() { document.body.setAttribute('data-bg', document.getElementById('setting-bg').value); document.body.setAttribute('data-card', document.getElementById('setting-card').value); }
         function saveSettings() {
             myName = document.getElementById('setting-name').value || "Mustafa";
             rules.swapCount = parseInt(document.getElementById('rule-swap-count').value);
             rules.plus4Count = parseInt(document.getElementById('rule-plus4-count').value);
-            openScreen('main-menu'); showToast("Ayarlar kaydedildi!", "success");
+            playerNames[0] = myName;
             document.getElementById('lobby-my-name').innerText = myName;
+            openScreen('main-menu'); showToast("Ayarlar kaydedildi!", "success");
         }
         function showToast(msg, type="normal") {
             const container = document.getElementById('toast-container');
@@ -529,73 +531,173 @@
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
         }
 
-        // --- OYUN KURMA ---
-        function openSinglePlayerSetup() {
-            isOnline = false; maxPlayers = 4;
-            openScreen('single-setup');
-        }
+        // --- NETWORK & LOBBY LOGIC ---
+        function openSinglePlayerSetup() { isOnline = false; isHost = true; localPlayerId = 0; openScreen('single-setup'); }
         function startSingleGame() {
+            maxPlayers = 4; playerNames = [myName, "Bot 1", "Bot 2", "Bot 3"];
             difficulty = document.getElementById('single-diff').value;
             scores = [0, 0, 0, 0]; roundStarter = -1;
             launchGameSequence();
         }
         
         function hostGame() {
-            isOnline = true;
-            document.getElementById('random-code').innerText = "Kod: " + Math.floor(10000 + Math.random() * 90000);
+            isOnline = true; isHost = true; localPlayerId = 0;
+            let code = Math.floor(10000 + Math.random() * 90000).toString();
+            document.getElementById('random-code').innerText = "Kod: " + code;
             document.getElementById('host-controls').classList.remove('hidden');
             document.getElementById('btn-start-online').classList.remove('hidden');
             document.getElementById('lobby-wait-text').classList.add('hidden');
-            document.getElementById('joiner-status').innerText = "Bekleniyor...";
-            openScreen('host-lobby');
             
-            setTimeout(() => { document.getElementById('joiner-status').innerText = "2. Oyuncu Katıldı"; document.getElementById('joiner-status').style.color = "#10b981"; }, 3000);
-        }
-        
-        function joinSimulatedGame() {
-            let code = document.getElementById('room-code-input').value;
-            if(code.length !== 5) return showToast("5 haneli geçerli bir kod girin!", "error");
-            isOnline = true;
-            showToast("Odaya bağlanılıyor...", "success");
-            setTimeout(() => {
-                document.getElementById('random-code').innerText = "Oda: " + code;
-                document.getElementById('host-controls').classList.add('hidden');
-                document.getElementById('btn-start-online').classList.add('hidden');
-                document.getElementById('lobby-wait-text').classList.remove('hidden');
-                
-                document.getElementById('joiner-status').innerText = "Kurucu bekleniyor...";
-                openScreen('host-lobby');
-            }, 1000);
-        }
-        
-        function initGameSession() {
-            if(isOnline) {
-                maxPlayers = parseInt(document.getElementById('player-count').value);
-                difficulty = document.getElementById('host-bot-diff').value;
-            }
-            scores = [0, 0, 0, 0]; roundStarter = -1;
-            launchGameSequence();
+            peer = new Peer('pico-game-' + code);
+            peer.on('open', id => { showToast("Oda başarıyla oluşturuldu!", "success"); });
+            peer.on('connection', conn => {
+                conn.on('data', data => {
+                    if (data.type === 'JOIN') {
+                        let slot = hostConns.findIndex((c, i) => i !== 0 && c === null && i < maxPlayers);
+                        if(slot === -1) { conn.send({type: 'ERROR', msg: 'Oda dolu!'}); return; }
+                        hostConns[slot] = conn;
+                        playerNames[slot] = data.name;
+                        conn.send({type: 'JOIN_SUCCESS', pIndex: slot});
+                        updateLobbyUI();
+                        if(gameActive) broadcastState(); // Eğer oyun oynanıyorsa yeni bağlanan izler/katılır
+                    } else { handleClientRequest(slot, data); }
+                });
+                conn.on('close', () => {
+                    let slot = hostConns.indexOf(conn);
+                    if(slot !== -1) {
+                        hostConns[slot] = null;
+                        playerNames[slot] = "Bot " + slot;
+                        updateLobbyUI();
+                        if(gameActive) { showToast(`Oyuncu ayrıldı. Yerine bot geçti!`, "error"); broadcastState(); }
+                    }
+                });
+            });
+            openScreen('host-lobby'); updateLobbyUI();
         }
 
-        function launchGameSequence() {
+        function joinRealGame() {
+            let code = document.getElementById('room-code-input').value;
+            if(code.length !== 5) return showToast("5 haneli kod girin!", "error");
+            
+            isOnline = true; isHost = false;
+            document.getElementById('btn-join-room').innerText = "Bağlanılıyor...";
+            
+            peer = new Peer();
+            peer.on('open', () => {
+                myConn = peer.connect('pico-game-' + code);
+                myConn.on('open', () => {
+                    myConn.send({type: 'JOIN', name: myName});
+                    document.getElementById('random-code').innerText = "Oda: " + code;
+                    document.getElementById('host-controls').classList.add('hidden');
+                    document.getElementById('btn-start-online').classList.add('hidden');
+                    document.getElementById('lobby-wait-text').classList.remove('hidden');
+                    openScreen('host-lobby'); updateLobbyUI();
+                });
+                myConn.on('data', data => { handleServerData(data); });
+                myConn.on('close', () => { showToast("Host bağlantıyı kesti!", "error"); setTimeout(() => window.location.reload(), 2000); });
+            });
+        }
+
+        function updateLobbyUI() {
+            if(isHost) maxPlayers = parseInt(document.getElementById('player-count').value);
+            let html = `<li style="color:#10b981;">1. ${playerNames[0]} (Host)</li>`;
+            for(let i=1; i<maxPlayers; i++) {
+                if(isHost) {
+                    if(hostConns[i]) html += `<li style="color:#60a5fa;">${i+1}. ${playerNames[i]} (Bağlandı)</li>`;
+                    else html += `<li style="color:#aaa;">${i+1}. Bekleniyor... (Bot Geçecek)</li>`;
+                } else {
+                    html += `<li style="color:#aaa;">${i+1}. Oyuncu</li>`; // Client lobiyi detaylı bilmez
+                }
+            }
+            document.getElementById('lobby-players').innerHTML = html;
+        }
+
+        // --- NETWORK İLETİŞİM İŞLEYİCİLERİ ---
+        function broadcast(data) {
+            if(!isOnline || !isHost) return;
+            hostConns.forEach(c => { if(c) c.send(data); });
+        }
+        function broadcastState() {
+            broadcast({ type: 'SYNC_STATE', state: { hands, discardPile, currentPlayer, currentColor, direction, scores, picoClicked, maxPlayers, playerNames } });
+        }
+
+        function handleServerData(data) {
+            if(data.type === 'JOIN_SUCCESS') { localPlayerId = data.pIndex; showToast("Odaya Katıldın!", "success"); }
+            else if(data.type === 'START_GAME') {
+                document.getElementById('btn-next-round').classList.add('hidden'); // Sadece host kontrol eder
+                document.getElementById('btn-end-game').classList.add('hidden');
+                maxPlayers = data.maxPlayers;
+                playerNames = data.playerNames;
+                launchGameSequence(data.initialState);
+            }
+            else if(data.type === 'SYNC_STATE') {
+                hands = data.state.hands; discardPile = data.state.discardPile;
+                currentPlayer = data.state.currentPlayer; currentColor = data.state.currentColor;
+                direction = data.state.direction; scores = data.state.scores;
+                picoClicked = data.state.picoClicked; maxPlayers = data.state.maxPlayers;
+                playerNames = data.state.playerNames;
+                updateUI(); updateClientTimers();
+            }
+            else if(data.type === 'ANIM_PLAY') {
+                let startEl = getSeatStartEl(data.pIndex, data.cardIndex);
+                playSound(data.card.val === '+4' ? 'plus4' : 'card');
+                animateCard(startEl, document.getElementById('discard-pile'), getCardHTML(data.card), () => {});
+            }
+            else if(data.type === 'ANIM_DRAW') {
+                let targetEl = getSeatStartEl(data.pIndex, -1);
+                playSound('deal');
+                animateCard(document.getElementById('deck'), targetEl, '<div class="card-back"></div>', () => {});
+            }
+            else if(data.type === 'TOAST') { showToast(data.msg, data.msgType); if(data.sound) playSound(data.sound); }
+            else if(data.type === 'ROUND_END') { showRoundEnd(data.winnerIndex, data.scores); }
+        }
+
+        function handleClientRequest(pIndex, data) {
+            if(currentPlayer !== pIndex) return; // Sadece sırası gelense işlem yap
+            if(data.type === 'REQ_PLAY') {
+                hostExecutePlay(pIndex, data.cardIndex, data.color, data.swapTarget);
+            } else if(data.type === 'REQ_DRAW') {
+                userDrawCardLogic(pIndex);
+            } else if(data.type === 'REQ_PASS') {
+                passTurnLogic(pIndex);
+            } else if(data.type === 'REQ_PICO') {
+                clickPicoLogic(pIndex);
+            }
+        }
+
+        // --- OYUN BAŞLATMA ---
+        function initGameSession() {
+            if(isOnline && isHost) difficulty = document.getElementById('host-bot-diff').value;
+            scores = [0, 0, 0, 0]; roundStarter = -1;
+            
+            if(isOnline && isHost) {
+                // Herkes için boş elleri hazırla
+                hands = [[], [], [], []]; buildDeck();
+                let initState = { deck, hands, discardPile: [], currentPlayer: 0 };
+                broadcast({ type: 'START_GAME', initialState, maxPlayers, playerNames });
+                launchGameSequence(initState);
+            }
+        }
+
+        function launchGameSequence(syncState = null) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             
-            // Profesyonel Loading Ekranı (Tüm ekranı kapatır, setup'ı gizler)
             let introOverlay = document.getElementById('intro-overlay');
             introOverlay.style.opacity = '1';
             introOverlay.classList.remove('hidden');
             
-            document.querySelectorAll('.screen').forEach(el => {
-                if(el.id !== 'intro-overlay') el.classList.add('hidden');
-            });
+            document.querySelectorAll('.screen').forEach(el => { if(el.id !== 'intro-overlay') el.classList.add('hidden'); });
             document.getElementById('bg-anim').classList.add('hidden'); 
             document.getElementById('game-arena').classList.remove('hidden');
             
-            document.getElementById('name-0').innerText = myName;
-            for(let i=1; i<4; i++) document.getElementById(`name-${i}`).innerText = isOnline ? `Oyuncu ${i+1}` : `Bot ${i}`;
-            
-            // Kartları ve masayı arka planda anında (isFirstSetup=true) diz!
-            initRound(true);
+            if(isHost) initRound(true);
+            else {
+                // Client bekler ve arayüzü hazırlar
+                setTimeout(() => {
+                    introOverlay.style.opacity = '0';
+                    setTimeout(() => { introOverlay.classList.add('hidden'); }, 500);
+                }, 2000);
+            }
         }
 
         function buildDeck() {
@@ -611,17 +713,10 @@
         }
 
         function initRound(isFirstSetup = false) {
+            if(!isHost) return; // Sadece host yönetir
             buildDeck();
             hands = [[], [], [], []];
             
-            document.getElementById('my-cards').innerHTML = '';
-            for (let i = 1; i <= 3; i++) document.getElementById(`cards-${i}`).innerHTML = '';
-            document.getElementById('discard-pile').innerHTML = '';
-            document.getElementById('discard-pile').style.boxShadow = "none";
-            
-            for(let i=1; i<=3; i++) document.getElementById(`player-${i}`).style.display = (i < maxPlayers) ? 'flex' : 'none';
-
-            // Masayı anında kuruyoruz. Loading arkasında her şey hazır ediliyor.
             for (let i = 0; i < 7; i++) { for (let p = 0; p < maxPlayers; p++) hands[p].push(deck.pop()); }
             
             let firstCard = deck.pop();
@@ -629,37 +724,72 @@
             discardPile = [firstCard]; currentColor = firstCard.color;
             
             selectedCardIndex = -1; picoClicked = [false, false, false, false]; direction = 1;
-            hasDrawnThisTurn = false; document.getElementById('btn-pass').classList.add('hidden'); document.getElementById('btn-draw').classList.remove('hidden');
+            hasDrawnThisTurn = false; 
             
             if(roundStarter === -1) roundStarter = Math.floor(Math.random() * maxPlayers);
             else roundStarter = (roundStarter + 1) % maxPlayers;
             
             currentPlayer = roundStarter;
-            updateUI(); // Masa tamamlandı! Ekranda görünmüyor çünkü loading var.
+            
+            broadcastState(); updateUI();
             
             if (isFirstSetup) {
-                // Intro animasyonunun (Pico yazısı) bitmesini bekleyip, masayı zarifçe göster.
                 setTimeout(() => {
                     let intro = document.getElementById('intro-overlay');
-                    intro.style.opacity = '0'; // Yavaşça masayı aç
-                    setTimeout(() => {
-                        intro.classList.add('hidden');
-                        startGamePlay();
-                    }, 500);
+                    intro.style.opacity = '0';
+                    setTimeout(() => { intro.classList.add('hidden'); startGamePlayHost(); }, 500);
                 }, 2000);
-            } else {
-                // 2. Turlar direkt başlar.
-                startGamePlay();
-            }
+            } else { startGamePlayHost(); }
         }
         
-        function startGamePlay() {
-            showToast(`${document.getElementById('name-'+currentPlayer).innerText} başlıyor!`, "success");
+        function startGamePlayHost() {
+            broadcast({type:'TOAST', msg:`${playerNames[currentPlayer]} başlıyor!`, msgType:'success'});
+            showToast(`${playerNames[currentPlayer]} başlıyor!`, "success");
             gameActive = true;
-            setTimeout(startTurn, 1000);
+            setTimeout(startTurnHost, 1000);
         }
 
-        // --- ANİMASYON ---
+        // --- GÖRSEL OTURMA DÜZENİ (Seat Mapping) ---
+        function getVisualSeat(pIndex) { return (pIndex - localPlayerId + maxPlayers) % maxPlayers; }
+        
+        function getSeatStartEl(pIndex, cardIndex) {
+            let vSeat = getVisualSeat(pIndex);
+            if(vSeat === 0) {
+                let cards = document.getElementById('my-cards').children;
+                return cards[cardIndex] || document.getElementById('my-cards');
+            } else return document.getElementById(`cards-${vSeat}`);
+        }
+
+        function updateUI() {
+            // Koltukları temizle ve gizle
+            [0,1,2,3].forEach(s => { document.getElementById(`player-${s}`).style.display = 'none'; });
+            
+            for(let i=0; i<maxPlayers; i++) {
+                let vSeat = getVisualSeat(i);
+                
+                if (vSeat === 0) {
+                    document.getElementById('my-cards').innerHTML = hands[i].map((c, idx) => getCardHTML(c, true, idx)).join('');
+                } else {
+                    let html = hands[i].map(() => `<div class="card-back"></div>`).join('');
+                    document.getElementById(`cards-${vSeat}`).innerHTML = html;
+                }
+                document.getElementById(`name-${vSeat}`).innerText = playerNames[i];
+                document.getElementById(`player-${vSeat}`).style.display = 'flex';
+                document.getElementById(`info-${vSeat}`).classList.toggle('active-turn', i === currentPlayer);
+            }
+            
+            let topCard = discardPile[discardPile.length - 1];
+            if(topCard) document.getElementById('discard-pile').innerHTML = getCardHTML(topCard, false);
+
+            if(currentPlayer === localPlayerId) {
+                document.getElementById('btn-draw').classList.toggle('hidden', hasDrawnThisTurn);
+                document.getElementById('btn-pass').classList.toggle('hidden', !hasDrawnThisTurn);
+            } else {
+                document.getElementById('btn-draw').classList.remove('hidden');
+                document.getElementById('btn-pass').classList.add('hidden');
+            }
+        }
+
         function animateCard(startEl, targetEl, htmlContent, callback) {
             if(!startEl || !targetEl) { callback(); return; }
             let rect1 = startEl.getBoundingClientRect(), rect2 = targetEl.getBoundingClientRect();
@@ -672,64 +802,79 @@
             setTimeout(() => { clone.remove(); callback(); }, 400); 
         }
 
-        // --- OYUN SIRASI & SÜRE ---
-        function startTurn() {
-            if (!gameActive) return;
+        // --- HOST OYUN AKIŞI (SMART HOST) ---
+        function startTurnHost() {
+            if (!gameActive || !isHost) return;
             hasDrawnThisTurn = false;
-            if(currentPlayer === 0) {
-                document.getElementById('btn-draw').classList.remove('hidden');
-                document.getElementById('btn-pass').classList.add('hidden');
-            }
+            broadcastState(); updateUI(); updateTimersHost();
 
-            for (let i = 0; i < 4; i++) {
-                let infoEl = document.getElementById(`info-${i}`);
-                if(infoEl) infoEl.classList.toggle('active-turn', i === currentPlayer);
-                let box = document.getElementById(`timer-box-${i}`);
-                if(box) box.style.display = 'none';
-            }
-
-            let activeBox = document.getElementById(`timer-box-${currentPlayer}`);
-            let activeBar = document.getElementById(`timer-bar-${currentPlayer}`);
-            if(activeBox && activeBar) {
-                activeBox.style.display = 'block'; activeBar.style.width = '100%'; activeBar.style.backgroundColor = '#10b981';
-                timeLeft = 15; clearInterval(timerInterval);
-                timerInterval = setInterval(() => {
-                    timeLeft--; activeBar.style.width = ((timeLeft / 15) * 100) + '%';
-                    if (timeLeft <= 5) activeBar.style.backgroundColor = '#ef4444';
-                    
-                    if (timeLeft <= 0) {
-                        clearInterval(timerInterval);
-                        if (currentPlayer === 0) {
-                            if (!hasDrawnThisTurn) {
-                                showToast("Süre doldu, kart çekiliyor!", "error");
-                                userDrawCard(true); 
-                            } else {
-                                showToast("Süre doldu, pas geçiliyor.", "error");
-                                passTurn();
-                            }
-                        } else {
-                            systemDraw(currentPlayer, 1, true, () => { nextTurn(); });
-                        }
-                    }
-                }, 1000);
-            }
-
-            if (currentPlayer !== 0) {
+            if (isBot(currentPlayer)) {
                 let thinkTime = Math.random() < 0.3 ? (3000 + Math.random()*2000) : (1000 + Math.random()*1500);
                 setTimeout(botPlay, thinkTime);
             }
         }
 
-        // --- KART OYNAMA ---
-        function selectCard(idx) { if (currentPlayer !== 0) return; selectedCardIndex = (selectedCardIndex === idx) ? -1 : idx; updateUI(); }
+        function isBot(pIndex) {
+            // Eğer online ise ve o slotta conn yoksa bot'tur. Değilse Single player'da 0 harici herkes bottur.
+            if(isOnline) return pIndex !== 0 && !hostConns[pIndex];
+            return pIndex !== 0;
+        }
+
+        // Timer yönetimi
+        function updateTimersHost() {
+            clearInterval(timerInterval);
+            for(let i=0; i<4; i++) { let b = document.getElementById(`timer-box-${i}`); if(b) b.style.display='none'; }
+            
+            timeLeft = 15;
+            let vSeat = getVisualSeat(currentPlayer);
+            let activeBox = document.getElementById(`timer-box-${vSeat}`), activeBar = document.getElementById(`timer-bar-${vSeat}`);
+            if(activeBox && activeBar) {
+                activeBox.style.display = 'block'; activeBar.style.width = '100%'; activeBar.style.backgroundColor = '#10b981';
+                timerInterval = setInterval(() => {
+                    timeLeft--; activeBar.style.width = ((timeLeft / 15) * 100) + '%';
+                    if (timeLeft <= 5) activeBar.style.backgroundColor = '#ef4444';
+                    if (timeLeft <= 0) { clearInterval(timerInterval); handleTimeoutHost(currentPlayer); }
+                }, 1000);
+            }
+        }
+        function updateClientTimers() {
+            clearInterval(timerInterval);
+            for(let i=0; i<4; i++) { let b = document.getElementById(`timer-box-${i}`); if(b) b.style.display='none'; }
+            timeLeft = 15;
+            let vSeat = getVisualSeat(currentPlayer);
+            let activeBox = document.getElementById(`timer-box-${vSeat}`), activeBar = document.getElementById(`timer-bar-${vSeat}`);
+            if(activeBox && activeBar) {
+                activeBox.style.display = 'block'; activeBar.style.width = '100%'; activeBar.style.backgroundColor = '#10b981';
+                timerInterval = setInterval(() => {
+                    timeLeft--; activeBar.style.width = ((timeLeft / 15) * 100) + '%';
+                    if (timeLeft <= 5) activeBar.style.backgroundColor = '#ef4444';
+                }, 1000); // Sadece görsel çalışır, işlemi Host bitirir
+            }
+        }
+
+        function handleTimeoutHost(pIndex) {
+            if (!hasDrawnThisTurn) {
+                showToast("Süre doldu, otomatik kart çekiliyor!", "error");
+                broadcast({type:'TOAST', msg:"Süre doldu, kart çekiliyor!", msgType:'error'});
+                userDrawCardLogic(pIndex);
+            } else {
+                passTurnLogic(pIndex);
+            }
+        }
+
+        // --- KART OYNAMA KONTROLLERİ ---
+        function selectCard(idx) { if (currentPlayer !== localPlayerId) return; selectedCardIndex = (selectedCardIndex === idx) ? -1 : idx; updateUI(); }
 
         function playSelectedCard() {
-            if (currentPlayer !== 0 || selectedCardIndex === -1) return;
-            let card = hands[0][selectedCardIndex];
+            if (currentPlayer !== localPlayerId || selectedCardIndex === -1) return;
+            let card = hands[localPlayerId][selectedCardIndex];
+            
             if (isValidPlay(card)) {
-                if (hands[0].length === 2 && !picoClicked[0]) {
+                if (hands[localPlayerId].length === 2 && !picoClicked[localPlayerId]) {
                     playSound('error'); showToast("Pico demeyi unuttun! Ceza kartı çektin.", "error");
-                    systemDraw(0, 1, true); selectedCardIndex = -1; nextTurn(); return;
+                    if(isOnline) myConn.send({type: 'REQ_DRAW'}); 
+                    else userDrawCardLogic(localPlayerId);
+                    selectedCardIndex = -1; return;
                 }
                 
                 if (card.color === 'wild') {
@@ -738,8 +883,33 @@
                     else document.getElementById('swap-targets').classList.add('hidden'); 
                     return; 
                 }
-                executePlay(0, selectedCardIndex);
+                sendPlayReq(selectedCardIndex, null, -1);
             } else { playSound('error'); showToast("Bu kartı atamazsın!", "error"); }
+        }
+
+        function selectSwapTarget() {
+            let card = hands[localPlayerId][selectedCardIndex];
+            if(card.val === '+4') {
+                document.getElementById('swap-modal').classList.add('hidden');
+                sendPlayReq(selectedCardIndex, pendingColor, -1);
+            } else {
+                document.getElementById('swap-targets').classList.remove('hidden');
+                let html = '';
+                for(let i=0; i<maxPlayers; i++) {
+                    if(i !== localPlayerId) html += `<button class="modal-btn" style="background:#334155;" onclick="confirmSwap(${i})">${playerNames[i]}</button>`;
+                }
+                document.getElementById('swap-target-buttons').innerHTML = html;
+            }
+        }
+        function confirmSwap(target) {
+            document.getElementById('swap-modal').classList.add('hidden');
+            sendPlayReq(selectedCardIndex, pendingColor, target);
+        }
+
+        function sendPlayReq(cardIndex, color, swapTarget) {
+            if(isOnline && !isHost) myConn.send({ type: 'REQ_PLAY', cardIndex, color, swapTarget });
+            else hostExecutePlay(localPlayerId, cardIndex, color, swapTarget);
+            selectedCardIndex = -1;
         }
 
         function isValidPlay(card) {
@@ -747,129 +917,149 @@
             return card.color === 'wild' || card.color === currentColor || card.val === topCard.val;
         }
 
-        function executePlay(pIndex, cardIndex, forceWildColor = null, swapTarget = -1) {
+        // --- HOST TARAFINDA AKSİYON ÇALIŞTIRMA ---
+        function hostExecutePlay(pIndex, cardIndex, forceColor = null, swapTarget = -1) {
+            if (!gameActive || !isHost) return;
             clearInterval(timerInterval);
-            let card = hands[pIndex].splice(cardIndex, 1)[0];
-            selectedCardIndex = -1;
+            let card = hands[pIndex][cardIndex];
+            if (card.color === 'wild' && !forceColor) forceColor = colors[Math.floor(Math.random() * colors.length)];
             
-            let startEl = pIndex === 0 ? document.getElementById('my-cards').children[cardIndex] : document.getElementById(`cards-${pIndex}`);
-            let targetEl = document.getElementById('discard-pile');
+            // 1. Herkese animasyonu izlet
+            playSound(card.val === '+4' ? 'plus4' : 'card');
+            broadcast({ type: 'ANIM_PLAY', pIndex, cardIndex, card });
+            let startEl = getSeatStartEl(pIndex, cardIndex);
             
-            playSound('play');
-            animateCard(startEl, targetEl, getCardHTML(card), () => {
+            animateCard(startEl, document.getElementById('discard-pile'), getCardHTML(card), () => {
+                // 2. Animasyon bitti, mantığı uygula
+                card = hands[pIndex].splice(cardIndex, 1)[0];
                 discardPile.push(card);
                 picoClicked[pIndex] = false;
-                let skipTurn = false;
                 
-                if(card.color !== 'wild') {
-                    currentColor = card.color;
-                    document.getElementById('discard-pile').style.boxShadow = "none";
-                } else {
-                    currentColor = forceWildColor ? forceWildColor : colors[Math.floor(Math.random() * colors.length)];
+                if(card.color !== 'wild') { currentColor = card.color; document.getElementById('discard-pile').style.boxShadow = "none"; } 
+                else {
+                    currentColor = forceColor;
                     let colorName = currentColor==='red'?'KIRMIZI':currentColor==='blue'?'MAVİ':currentColor==='green'?'YEŞİL':'SARI';
-                    let glowColor = `var(--c-${currentColor}-pure)`;
-                    document.getElementById('discard-pile').style.boxShadow = `0 0 30px ${glowColor}, inset 0 0 20px ${glowColor}`;
                     card.displayWildText = colorName; 
                 }
 
+                let skipTurn = false;
                 if (card.val === '+2') { 
+                    skipTurn = true; 
                     let nextP = (currentPlayer + direction + maxPlayers) % maxPlayers;
-                    systemDraw(nextP, 2, true); skipTurn = true; showToast("+2 Kart Çektirildi!");
+                    hostExecuteDraw(nextP, 2, () => { finishPlayTurnHost(pIndex, card, skipTurn); });
+                    return; // Draw bitince devam edecek
                 }
                 else if (card.val === '+4') {
+                    skipTurn = true; 
                     let nextP = (currentPlayer + direction + maxPlayers) % maxPlayers;
-                    systemDraw(nextP, 4, true); skipTurn = true; showToast("+4 Kart Çektirildi!");
+                    hostExecuteDraw(nextP, 4, () => { finishPlayTurnHost(pIndex, card, skipTurn); });
+                    return;
                 }
-                else if (card.val === 'Değiş' && swapTarget !== -1 && swapTarget !== pIndex) {
+                else if (card.val === 'Değiş' && swapTarget !== -1) {
                     let temp = hands[pIndex]; hands[pIndex] = hands[swapTarget]; hands[swapTarget] = temp;
-                    showToast(`Eller Değiştirildi! Renk: ${currentColor}`, "success");
-                    picoClicked[pIndex] = false; picoClicked[swapTarget] = false;
                 }
-                else if (card.val === '⇄') { direction *= -1; showToast("Yön Değişti!"); }
+                else if (card.val === '⇄') { direction *= -1; }
 
-                if (hands[pIndex].length === 0 && card.val !== 'Değiş') { roundEnd(pIndex); return; } 
-                
-                updateUI();
-                if(skipTurn) { currentPlayer = (currentPlayer + direction + maxPlayers) % maxPlayers; }
-                nextTurn();
+                finishPlayTurnHost(pIndex, card, skipTurn);
             });
         }
 
-        // --- SWAP / WILD MODAL LOGIC ---
-        function selectSwapTarget() {
-            let card = hands[0][selectedCardIndex];
-            if(card.val === '+4') {
-                document.getElementById('swap-modal').classList.add('hidden');
-                executePlay(0, selectedCardIndex, pendingColor, -1);
-            } else {
-                document.getElementById('swap-targets').classList.remove('hidden');
-                let html = '';
-                for(let i=1; i<maxPlayers; i++) {
-                    html += `<button class="modal-btn" style="background:#334155;" onclick="confirmSwap(${i})">${document.getElementById(`name-${i}`).innerText}</button>`;
-                }
-                document.getElementById('swap-target-buttons').innerHTML = html;
-            }
-        }
-        function confirmSwap(target) {
-            document.getElementById('swap-modal').classList.add('hidden');
-            executePlay(0, selectedCardIndex, pendingColor, target);
+        function finishPlayTurnHost(pIndex, card, skipTurn) {
+            if (hands[pIndex].length === 0 && card.val !== 'Değiş') { roundEndHost(pIndex); return; } 
+            if(skipTurn) currentPlayer = (currentPlayer + direction + maxPlayers) % maxPlayers;
+            currentPlayer = (currentPlayer + direction + maxPlayers) % maxPlayers;
+            startTurnHost();
         }
 
-        // --- ÇEKME VE PAS MANTIĞI ---
-        function userDrawCard(auto = false) {
-            if(currentPlayer !== 0 || hasDrawnThisTurn) return;
+        function userDrawCard() {
+            if(currentPlayer !== localPlayerId || hasDrawnThisTurn) return;
+            hasDrawnThisTurn = true; updateUI(); // Butonları yer değiştirir
+            if(isOnline && !isHost) myConn.send({ type: 'REQ_DRAW' });
+            else userDrawCardLogic(localPlayerId);
+        }
+
+        function userDrawCardLogic(pIndex) {
+            if (!isHost) return;
             hasDrawnThisTurn = true;
-            document.getElementById('btn-draw').classList.add('hidden');
-            document.getElementById('btn-pass').classList.remove('hidden');
-            
-            systemDraw(0, 1, true, () => {
+            hostExecuteDraw(pIndex, 1, () => {
+                // Sadece çekti, pas geçmesi için süre tanı
                 clearInterval(timerInterval);
                 timeLeft = 5;
-                let activeBar = document.getElementById(`timer-bar-0`);
+                let vSeat = getVisualSeat(pIndex);
+                let activeBar = document.getElementById(`timer-bar-${vSeat}`);
                 if(activeBar) {
                     activeBar.style.width = '100%'; activeBar.style.backgroundColor = '#f59e0b';
                     timerInterval = setInterval(() => {
                         timeLeft--; activeBar.style.width = ((timeLeft / 5) * 100) + '%';
-                        if (timeLeft <= 0) { clearInterval(timerInterval); passTurn(); }
+                        if (timeLeft <= 0) { clearInterval(timerInterval); passTurnLogic(pIndex); }
                     }, 1000);
                 }
+                broadcastState(); // Diğerlerine son durumu gönder
             });
         }
 
         function passTurn() {
-            if(currentPlayer !== 0) return;
-            clearInterval(timerInterval); nextTurn();
+            if(currentPlayer !== localPlayerId) return;
+            if(isOnline && !isHost) myConn.send({ type: 'REQ_PASS' });
+            else passTurnLogic(localPlayerId);
+        }
+        function passTurnLogic(pIndex) {
+            if (!isHost) return;
+            clearInterval(timerInterval); 
+            currentPlayer = (currentPlayer + direction + maxPlayers) % maxPlayers;
+            startTurnHost();
         }
 
-        function systemDraw(pIndex, amount = 1, forceAnim = true, cb = null) {
+        function hostExecuteDraw(pIndex, amount, cb = null) {
             let drawn = 0;
             function drawOne() {
                 if(drawn >= amount) { if(cb) cb(); updateUI(); return; }
-                if(deck.length === 0) { let top=discardPile.pop(); deck=discardPile; discardPile=[top]; deck.sort(()=>Math.random()-0.5); }
-                let newCard = deck.pop();
-                
-                if(pIndex === 0 && difficulty === 'easy' && !isValidPlay(newCard) && Math.random() < 0.6) {
-                    let goodIdx = deck.findIndex(c => isValidPlay(c));
-                    if(goodIdx > -1) { deck.push(newCard); newCard = deck.splice(goodIdx, 1)[0]; }
+                if(deck.length === 0) { 
+                    let top=discardPile.pop(); deck=discardPile; discardPile=[top]; 
+                    deck.sort(()=>Math.random()-0.5); 
                 }
-
-                hands[pIndex].push(newCard); playSound('deal');
+                let newCard = deck.pop();
+                hands[pIndex].push(newCard);
                 
-                if(forceAnim) {
-                    let targetEl = pIndex === 0 ? document.getElementById('my-cards') : document.getElementById(`cards-${pIndex}`);
-                    animateCard(document.getElementById('deck'), targetEl, '<div class="card-back"></div>', () => { drawn++; drawOne(); });
-                } else { drawn++; drawOne(); }
+                playSound('deal');
+                broadcast({ type: 'ANIM_DRAW', pIndex });
+                let targetEl = getSeatStartEl(pIndex, -1);
+                
+                animateCard(document.getElementById('deck'), targetEl, '<div class="card-back"></div>', () => { 
+                    drawn++; drawOne(); 
+                });
             }
             drawOne();
         }
 
+        function clickPico() {
+            if (currentPlayer !== localPlayerId) { playSound('error'); showToast("Şu an senin sıran değil!"); return; }
+            if (hands[localPlayerId].length > 2) { playSound('error'); showToast("Kart sayın fazla!"); return; }
+            
+            if(isOnline && !isHost) myConn.send({ type: 'REQ_PICO' });
+            else clickPicoLogic(localPlayerId);
+        }
+        function clickPicoLogic(pIndex) {
+            picoClicked[pIndex] = true; 
+            playSound('pico'); 
+            let msg = `${playerNames[pIndex]} Pico deklare etti!`;
+            showToast(msg, "success");
+            broadcast({type: 'TOAST', msg: msg, msgType: 'success', sound: 'pico'});
+            broadcastState();
+        }
+
         // --- BOT ZEKASI ---
         function botPlay() {
-            if (!gameActive || currentPlayer === 0) return;
+            if (!gameActive || !isHost) return;
+            if (!isBot(currentPlayer)) return; 
+            
             let botHand = hands[currentPlayer];
             
+            // BOT PICO ZEKASI VE HATASI (Sonsuz Döngü Çözümü)
             let forgetChance = difficulty === 'easy' ? 0.3 : (difficulty === 'normal' ? 0.15 : 0.0);
-            if (botHand.length === 2 && Math.random() > forgetChance) picoClicked[currentPlayer] = true;
+            if (botHand.length === 2 && Math.random() > forgetChance) {
+                clickPicoLogic(currentPlayer);
+            }
 
             let cardIdx = botHand.findIndex(c => isValidPlay(c));
             if(difficulty === 'hard') {
@@ -878,7 +1068,13 @@
             }
 
             if (cardIdx > -1) {
-                if (botHand.length === 1 && !picoClicked[currentPlayer]) { systemDraw(currentPlayer, 1, true); }
+                // Eğer kart atabiliyor ama Pico demeyi unuttuysa (ve 1 kartı varsa): Sadece ceza çeker, ATAMAZ. Sıra geçer.
+                if (botHand.length === 1 && !picoClicked[currentPlayer]) { 
+                    let msg = `${playerNames[currentPlayer]} Pico demeyi unuttu! Ceza çekiyor.`;
+                    showToast(msg, "error"); broadcast({type: 'TOAST', msg: msg, msgType: 'error'});
+                    hostExecuteDraw(currentPlayer, 1, () => { passTurnLogic(currentPlayer); }); 
+                    return; 
+                }
                 
                 let card = botHand[cardIdx];
                 let chosenColor = null, chosenTarget = -1;
@@ -890,22 +1086,14 @@
                         if(i !== currentPlayer && hands[i].length < minCards) { minCards = hands[i].length; chosenTarget = i; }
                     }
                 }
-                executePlay(currentPlayer, cardIdx, chosenColor, chosenTarget);
+                hostExecutePlay(currentPlayer, cardIdx, chosenColor, chosenTarget);
             } else {
-                systemDraw(currentPlayer, 1, true, () => { nextTurn(); });
+                hostExecuteDraw(currentPlayer, 1, () => { passTurnLogic(currentPlayer); });
             }
         }
 
-        function clickPico() {
-            if (currentPlayer === 0 && hands[0].length <= 2) {
-                picoClicked[0] = true; playSound('play'); showToast("Pico deklare edildi!", "success");
-            } else if(currentPlayer === 0) { playSound('error'); showToast("Şu an Pico diyemezsin!"); }
-        }
-
-        function nextTurn() { currentPlayer = (currentPlayer + direction + maxPlayers) % maxPlayers; updateUI(); startTurn(); }
-
         // --- SKORLAMA VE OYUN SONU ---
-        function roundEnd(winnerIndex) {
+        function roundEndHost(winnerIndex) {
             clearInterval(timerInterval); gameActive = false;
             let roundScore = 0;
             for(let i=0; i<maxPlayers; i++) {
@@ -918,20 +1106,29 @@
                 }
             }
             scores[winnerIndex] += roundScore;
-            
+            playSound('win');
+            broadcast({type: 'PLAY_SOUND', soundType: 'win'});
+            broadcast({type: 'ROUND_END', winnerIndex: winnerIndex, scores: scores});
+            showRoundEnd(winnerIndex, scores);
+        }
+
+        function showRoundEnd(winnerIndex, currScores) {
+            gameActive = false;
             let html = '';
             for(let i=0; i<maxPlayers; i++) {
-                let name = document.getElementById(`name-${i}`).innerText;
                 let isWin = i === winnerIndex ? " <span style='color:#f59e0b;'>🏆</span>" : "";
-                html += `<div>${name}: ${scores[i]} Puan${isWin}</div>`;
+                html += `<div>${playerNames[i]}: ${currScores[i]} Puan${isWin}</div>`;
             }
             document.getElementById('score-list').innerHTML = html;
             document.getElementById('scoreboard-modal').classList.remove('hidden');
         }
 
-        function continueGame() { document.getElementById('scoreboard-modal').classList.add('hidden'); initRound(); }
+        function continueGame() { 
+            if(isHost) { document.getElementById('scoreboard-modal').classList.add('hidden'); initRound(); }
+        }
         
         function endGameFinal() {
+            if(!isHost) return;
             document.getElementById('scoreboard-modal').classList.add('hidden');
             document.getElementById('pause-overlay').classList.add('hidden');
             
@@ -942,26 +1139,20 @@
 
             for (let i = 0; i < maxPlayers; i++) {
                 if (currentScores[i] !== currentScores[0]) allSame = false;
-                if (currentScores[i] === maxScore) winners.push(document.getElementById(`name-${i}`).innerText);
+                if (currentScores[i] === maxScore) winners.push(playerNames[i]);
             }
 
-            let winnerText = "";
-            let titleEl = document.getElementById('final-winner-title');
-            
-            if (allSame) {
-                winnerText = "";
-                titleEl.innerText = "🤝 DOSTLUK KAZANDI 🤝";
-            } else {
-                winnerText = winners.join(" & ");
-                titleEl.innerText = "👑 ŞAMPİYON 👑";
-            }
+            let winnerText = "", titleText = "";
+            if (allSame) { titleText = "🤝 DOSTLUK KAZANDI 🤝"; } 
+            else { winnerText = winners.join(" & "); titleText = "👑 ŞAMPİYON 👑"; }
 
+            // Herkesi bilgilendir (basit reload mantığı yerine görsel)
+            // Sadece HTML DOM güncelliyoruz:
+            document.getElementById('final-winner-title').innerText = titleText;
             document.getElementById('final-winner').innerText = winnerText;
             
             let html = '';
-            for(let i=0; i<maxPlayers; i++) {
-                html += `<div>${document.getElementById(`name-${i}`).innerText}: ${scores[i]}</div>`;
-            }
+            for(let i=0; i<maxPlayers; i++) { html += `<div>${playerNames[i]}: ${scores[i]}</div>`; }
             document.getElementById('final-scores').innerHTML = html;
             
             document.getElementById('game-arena').classList.add('hidden');
@@ -989,27 +1180,8 @@
             `;
         }
 
-        function updateUI() {
-            document.getElementById('my-cards').innerHTML = hands[0].map((c, i) => getCardHTML(c, true, i)).join('');
-            for (let i = 1; i <= 3; i++) {
-                if (i < maxPlayers) {
-                    let html = hands[i].map(() => `<div class="card-back"></div>`).join('');
-                    document.getElementById(`cards-${i}`).innerHTML = html;
-                }
-            }
-            let topCard = discardPile[discardPile.length - 1];
-            if(topCard) document.getElementById('discard-pile').innerHTML = getCardHTML(topCard, false);
-        }
-
-        // --- MENÜ KONTROLLERİ ---
-        function pauseGame() { 
-            gameActive = false; clearInterval(timerInterval); 
-            document.getElementById('pause-overlay').classList.remove('hidden'); 
-        }
-        function resumeGame() { 
-            document.getElementById('pause-overlay').classList.add('hidden'); 
-            gameActive = true; startTurn(); 
-        }
+        function pauseGame() { document.getElementById('pause-overlay').classList.remove('hidden'); }
+        function resumeGame() { document.getElementById('pause-overlay').classList.add('hidden'); }
     </script>
 </body>
 </html>
